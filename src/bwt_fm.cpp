@@ -20,7 +20,6 @@ void printVector(std::vector<std::vector<T>> const &mat) {
 class BWTFM
 {
     public:
-    std::string testmem = "hellogruezi";
     std::string reference_genome$;
     std::string Alphabet = "$ACGT";
 
@@ -29,8 +28,6 @@ class BWTFM
     //FM index uses LF mapping
     std::string FM_F; //first: suffix beginning
     std::string FM_L; //last: char preceding suffix
-//    std::map<int,int> FM_C {{0,0}};
-//    FM_C.push_back({3,5});
     std::map<char,int> nt_index = {
 	    {'$',0},
 	    {'A',1},
@@ -41,17 +38,6 @@ class BWTFM
     std::map<char,int> FM_C;
     std::map<char,std::vector<int>> FM_Occ;
     std::vector<std::vector<int>> FM_Occ_mat;
-
-    void printname()
-    {
-        std::cout<<"inside BWTFM, testmem is: "<<testmem<<std::endl;
-    }
-
-    void easy_day()
-    {
-        std::cout<<"inside BWTFM, ref is: "<<reference_genome$<<std::endl;
-	testmem = "changed by easy_day";
-    }
 
     void create_FL_table() 
     {
@@ -88,12 +74,6 @@ class BWTFM
     
 	    FM_F.push_back(p.first.at(0));
 	    FM_L.push_back(p.second.at(0));
-    
-	    /*
-	    std::string L_tmp;
-	    L_tmp.push_back(p.second.at(0));
-	    FM_L.push_back(L_tmp);
-	    */
     
         }
     }
@@ -136,25 +116,8 @@ class BWTFM
             }
 	    FM_Occ_mat[ nt_index[FM_L.at(j)] ][j] += 1;
         }
-//        FM_Occ_mat[1][0] = 1;
 
-/*
-//	vector<vector<int>> FM_Occ_mat
-
-	std::cout<<FM_L<<std::endl;
-	std::vector<int> init_vec(FM_L.size(),0);
-        for (int i=0;i<Alphabet.size();i++){
-            FM_Occ[Alphabet[i]] = init_vec;
-	}
-	char tmp_char = FM_L.at(0);
-        FM_Occ['$'].at(2) = 499;
-        FM_Occ[tmp_char][3] = 500;
-        for (int i=0;i<Alphabet.size();i++){
-            FM_Occ[Alphabet[i]] = init_vec;
-	}
-    */
     }
-
 
     
     //use vector of pairs and sort the first element
@@ -220,39 +183,9 @@ int main()
 
     BWTFM bwt1;
     bwt1.reference_genome$ = "TAGAGA$";
-    /*
-    bwt1.testmem = "yet another test";
-    std::cout<<bwt1.testmem<<std::endl;
-    std::cout<<"try memfunc: "<<std::endl;
-
-    bwt1.easy_day();
-
-    bwt1.printname();
-    std::cout<<bwt1.testmem[0]<<bwt1.testmem[2]<<std::endl;
-    bwt1.testmem += "$";
-    bwt1.printname();
-
-    std::string to_sort = bwt1.testmem;
-    std::sort(to_sort.begin(),to_sort.end());
-
-    std::cout<<to_sort<<std::endl;
-
-    std::cout<<reference_genome$<<std::endl;
-
-    int l = reference_genome.size();
-    std::cout<<reference_genome.substr(0,l-1)<<std::endl;
-*/
 
     bwt1.create_FL_table();
 
-    /*
-    std::vector<std::pair<std::string,std::string>> myvec = { {"bdsoij","jfuhd"},{"aijofd","lpddkd"} };
-    myvec.push_back({"fdjsd","djfdjg"});
-    for (int i=0;i<myvec.size();i++){
-	std::pair<std::string,std::string> p = myvec[i];
-        std::cout<<p.first<<", "<<p.second<<std::endl;
-    }
-    */
     std::cout<<"line129"<<std::endl;
     std::vector<std::pair<std::string,std::string>> myvec = bwt1.FL_table;
     for (int i=0;i<myvec.size();i++){
@@ -278,29 +211,9 @@ int main()
         std::cout << t.first << " " 
                   << t.second << "\n";
 
-//    for (i=0;i<5;i++)
-//    bwt1.FM_Occ['A'][0] = 1;
-//   bwt1.FM_Occ['G'][0] = 383;
-
-/*
-    for (auto& t : bwt1.FM_Occ)
-            std::cout << t.first << " " 
-                      << t.second[0] << " " 
-                      << t.second[1] << " " 
-                      << t.second[2] << " " 
-                      << t.second[3] << "\n";
-*/
     std::cout<<"printing FM_Occ_mat: "<<std::endl;
     printVector(bwt1.FM_Occ_mat);
 //    std::cout<<bwt1.FM_Occ[bwt1.FM_L.at(1)][0]<< std::endl;
-/*
-    std::vector<int> init_vec(bwt1.FM_L.size(),0);
-    for (int i=0;i<bwt1.Alphabet.size();i++){
-        bwt1.FM_Occ[bwt1.Alphabet[i]] = init_vec;
-    }
-    char tmp_char = bwt1.FM_L.at(0);
-    bwt1.FM_Occ[tmp_char][0] = 500;
-*/
     bwt1.printname();
 //    std::cout<<myvec<<std::endl;
 //
@@ -309,14 +222,6 @@ int main()
     int b = 4;
     std::vector<std::vector<int>> mat;
 
-    /*
-    std::vector<std::vector<int>> mat {
-				{ 0, 0, 0, 0, 0 },
-				{ 0, 0, 0, 0, 0 },
-				{ 0, 0, 50, 0, 0 },
-				{ 0, 0, 0, 0, 0 }
-			};
-*/
     mat.resize(a, std::vector<int>(b));
     mat[0][3] = 49;
     printVector(mat);

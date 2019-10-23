@@ -28,7 +28,7 @@ class BWTFM
     //FM index uses LF mapping
     std::string FM_F; //first: suffix beginning
     std::string FM_L; //last: char preceding suffix
-    std::map<char,int> nt_index = {
+    std::map<char,int> nt_2_index = {
 	    {'$',0},
 	    {'A',1},
 	    {'C',2},
@@ -36,8 +36,13 @@ class BWTFM
 	    {'T',4},
     };
     std::map<char,int> FM_C;
+    std::vector<int> FM_C_vec;
     std::map<char,std::vector<int>> FM_Occ;
     std::vector<std::vector<int>> FM_Occ_mat;
+
+    std::string query_pattern;
+    int pattern_sp;
+    int pattern_ep;
 
     void create_FL_table() 
     {
@@ -74,17 +79,20 @@ class BWTFM
     
 	    FM_F.push_back(p.first.at(0));
 	    FM_L.push_back(p.second.at(0));
-    
         }
     }
 
     void create_C(){
 	FM_C['$'] = 0;
+	FM_C_vec.push_back(0);
 	for (int i=1;i<Alphabet.size();i++){
 //	    std::cout<<Alphabet[i]<<std::endl;
-	    FM_C[Alphabet[i]] = FM_C[Alphabet[i-1]] + std::count(reference_genome$.begin(),reference_genome$.end(),Alphabet[i-1]);
+	    int count = FM_C[Alphabet[i-1]] + std::count(reference_genome$.begin(),reference_genome$.end(),Alphabet[i-1]);
+	    FM_C[Alphabet[i]] = count;
+	    FM_C_vec.push_back(count);
 	}
     }
+
 
     void create_Occ(){
 	std::cout<<"Create_Occ CALLED"<<std::endl;
@@ -107,18 +115,38 @@ class BWTFM
         //initialization
 	FM_Occ_mat.resize(Alphabet.size(), std::vector<int>( FM_L.size() ));
 
-	std::cout<<nt_index[FM_L.at(0)]<<std::endl;
-        FM_Occ_mat[ nt_index[FM_L.at(0)] ][0] = 1;
+	std::cout<<nt_2_index[FM_L.at(0)]<<std::endl;
+        FM_Occ_mat[ nt_2_index[FM_L.at(0)] ][0] = 1;
 
 	for (int j=1;j<FM_L.size();j++){
             for (int i=0;i<Alphabet.size();i++){
                 FM_Occ_mat[i][j] = FM_Occ_mat[i][j-1];
             }
-	    FM_Occ_mat[ nt_index[FM_L.at(j)] ][j] += 1;
+	    FM_Occ_mat[ nt_2_index[FM_L.at(j)] ][j] += 1;
         }
 
     }
 
+    //Need to keep track of original coordinates for read mapping
+    void locate_pattern(){
+	std::cout<<"locating pattern"<<std::endl;
+	std::string P = query_pattern;
+	int i = P.size()-1;
+        int sp = FM_C_vec[nt_2_index[P.at(i)]] + 1;
+        int ep = FM_C_vec[nt_2_index[P.at(i)]+1];
+	std::cout<<"i="<<i<<": "<<sp<<" , "<<ep<<std::endl;
+
+        while ((sp <= ep) & (i>=1)){
+	    char c = P.at(i-1);
+	    int c_idx = nt_2_index[c];
+	    sp = FM_C_vec[c_idx] + FM_Occ_mat[c_idx][sp-2]+1;
+	    ep = FM_C_vec[c_idx] + FM_Occ_mat[c_idx][ep-1];
+	    i-=1;
+	    std::cout<<"i="<<i<<": "<<sp<<" , "<<ep<<std::endl;
+	}
+	pattern_sp = sp;
+	pattern_ep = ep;
+    }
     
     //use vector of pairs and sort the first element
     //.first=F, .second=L
@@ -186,7 +214,7 @@ int main()
 
     bwt1.create_FL_table();
 
-    std::cout<<"line129"<<std::endl;
+    std::cout<<"*****************"<<std::endl;
     std::vector<std::pair<std::string,std::string>> myvec = bwt1.FL_table;
     for (int i=0;i<myvec.size();i++){
 	std::pair<std::string,std::string> p = myvec[i];
@@ -202,7 +230,6 @@ int main()
 	std::cout<<bwt1.FM_F.at(i)<<" , "<<bwt1.FM_L.at(i)<<std::endl;
     }
 
-    
     bwt1.create_C();
     bwt1.create_Occ_mat();
 
@@ -213,18 +240,11 @@ int main()
 
     std::cout<<"printing FM_Occ_mat: "<<std::endl;
     printVector(bwt1.FM_Occ_mat);
-//    std::cout<<bwt1.FM_Occ[bwt1.FM_L.at(1)][0]<< std::endl;
-    bwt1.printname();
-//    std::cout<<myvec<<std::endl;
-//
 
-    int a = 2;
-    int b = 4;
-    std::vector<std::vector<int>> mat;
+    bwt1.query_pattern = "AGA";
+    bwt1.locate_pattern();
+    std::cout<<bwt1.pattern_sp<<" , "<<bwt1.pattern_ep<<std::endl;
 
-    mat.resize(a, std::vector<int>(b));
-    mat[0][3] = 49;
-    printVector(mat);
     fa.close();
     return 0;
 }

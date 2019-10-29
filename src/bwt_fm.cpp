@@ -185,7 +185,7 @@ class BWTFM
     }
 };
 
-int main()
+int main2()
 {
     std::cout<<"Hello world"<<std::endl;
     std::string line;

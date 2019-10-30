@@ -1,0 +1,5 @@
+build/*
+obj/*
+bin/*
+debug/*
+.vscode/*

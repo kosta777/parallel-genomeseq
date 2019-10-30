@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.12.0)
+include("cmake/warning_flags.cmake")
+include("cmake/clang_tidy.cmake")
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb ")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall -std=c++14")
+
+project(GENOMESEQ)
+set(TARGET_NAME parseqal)
+option(DEBUG "debug mode" OFF)
+set(CMAKE_BUILD_TYPE "Release")
+if (DEBUG)
+  set(CMAKE_BUILD_TYPE "Debug")
+  set(TARGET_NAME parseqal_debug)
+endif (DEBUG)
+
+aux_source_directory(${PROJECT_SOURCE_DIR}/src DIR_SRCS)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+add_executable(${TARGET_NAME} ${DIR_SRCS})
+target_link_libraries(${TARGET_NAME} PRIVATE warning_flags)
+target_compile_definitions(${TARGET_NAME} PUBLIC -D_USE_MATH_DEFINES)

@@ -14,28 +14,19 @@ The project is built with CMake.
 
 ### Building a release version:
 
-```
+```bash
 cd build
-```
-
-```
 cmake ..
-```
-
-```
 make
 ```
 
 ### Building a debug version:
 
-```
+```bash
 cd build
-```
-
-```
 cmake .. -DDEBUG=ON
 ```
 
 ## Usage
 
-Run the binary ```parsequal``` in the ```bin``` directory.
+Run the binary `parsequal` in the `bin` directory.

@@ -18,12 +18,20 @@ if (DEBUG)
   set(TARGET_NAME parseqal_debug)
 endif ()
 
-aux_source_directory(${PROJECT_SOURCE_DIR}/src DIR_SRCS)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-add_executable(${TARGET_NAME} ${DIR_SRCS})
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)
+add_library(libaligner ${ALIGNER_SRCS})
+include_directories(${PROJECT_SOURCE_DIR}/src/aligner)
+
+add_executable(${TARGET_NAME} src/main.cpp)
+target_link_libraries(${TARGET_NAME} PRIVATE libaligner)
 target_link_libraries(${TARGET_NAME} PRIVATE warning_flags)
-target_compile_definitions(${TARGET_NAME} PUBLIC -D_USE_MATH_DEFINES)
+#target_compile_definitions(${TARGET_NAME} PUBLIC -D_USE_MATH_DEFINES)
+
+add_executable(bwt_fm src/bwt_fm.cpp)
+target_link_libraries(bwt_fm PRIVATE libaligner)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 if(CLANG_TIDY_EXE)
   set_target_properties(${TARGET_NAME} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")

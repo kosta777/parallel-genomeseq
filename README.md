@@ -12,7 +12,7 @@ These three closely related algorithms all fall under the category of dynamic pr
 
 The project is built with CMake.
 
-###Building a release version:
+### Building a release version:
 
 ```
 cd build
@@ -26,7 +26,7 @@ cmake ..
 make
 ```
 
-###Building a debug version:
+### Building a debug version:
 
 ```
 cd build

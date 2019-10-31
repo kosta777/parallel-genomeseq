@@ -4,23 +4,20 @@
 #include <string>
 #include "localaligner.h"
 
-
-class SWAligner: public LocalAligner
-{
-public:
+class SWAligner : public LocalAligner {
+  public:
     void setFirstSequence(std::string seq) override;
     void setSecondSequence(std::string seq) override;
     void calculateScore() override;
     double getScore() const override;
-private:
-    int ind; 
-    double penalty=-4;
+  private:
+    int ind;
+    double penalty = -4;
     std::string seqA;
     std::string seqB;
     double matrix_max;
 
-
     double similarityScore(char a, char b);
-    double findMax(double array[], int length);
+    double findMax(const double array[], int length);
 };
 #endif

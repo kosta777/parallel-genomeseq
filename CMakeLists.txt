@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb ")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall -std=c++14")
 
 project(GENOMESEQ)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(TARGET_NAME parseqal)
 option(DEBUG "debug mode" OFF)
 set(CMAKE_BUILD_TYPE "Release")
@@ -16,6 +17,7 @@ set(CMAKE_BUILD_TYPE "Release")
 if (DEBUG)
   set(CMAKE_BUILD_TYPE "Debug")
   set(TARGET_NAME parseqal_debug)
+  add_definitions(-DDEBUG)
 endif ()
 
 

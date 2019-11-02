@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 
   else if (argv1.compare("sw_solve_small") ==0){
     std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
-    std::string input_file_path = "data/ground_truth.csv"
+    std::string input_file_path = "data/data_small_ground_truth.csv";
     std::string output_file_path = "data/align_output.csv";
 
     std::cout<<"Hello sw_solve_small"<<std::endl;

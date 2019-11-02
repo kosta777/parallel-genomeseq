@@ -30,3 +30,10 @@ cmake .. -DDEBUG=ON
 ## Usage
 
 Run the binary `parsequal` in the `bin` directory.
+
+-Solving the small dataset and evaluate output using py script:
+
+```bash
+parseqal sw_solve_small
+python eval.py sw_solve_small
+```

@@ -31,9 +31,10 @@ cmake .. -DDEBUG=ON
 
 Run the binary `parsequal` in the `bin` directory.
 
--Solving the small dataset and evaluate output using py script:
+-Generate a modified input file with fields: index, QNAME, SEQ, POS (POS="true" alignment positions extracted from a SAM file), solve the small dataset using Smith-Waterman, and evaluate the alignment result wrt "true" positions using a py script:
 
 ```bash
+python reader.py gen_input
 parseqal sw_solve_small
 python eval.py sw_solve_small
 ```

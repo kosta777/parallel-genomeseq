@@ -214,7 +214,7 @@ int main() {
   std::cout << "*********************" << std::endl;
   auto to_sort = myvec;
   std::sort(to_sort.begin(), to_sort.end());
-  for (int i = 0; i < to_sort.size(); i++) {
+  for (unsigned int i = 0; i < to_sort.size(); i++) {
     auto p = to_sort[i];
     std::cout << p.first << ", " << p.second << std::endl;
     std::cout << bwt1.FM_F.at(i) << " , " << bwt1.FM_L.at(i) << std::endl;

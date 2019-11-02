@@ -10,12 +10,14 @@ class SWAligner : public LocalAligner {
     void setSecondSequence(std::string seq) override;
     void calculateScore() override;
     double getScore() const override;
+    int getPos() const override;
   private:
     int ind;
     double penalty = -4;
     std::string seqA;
     std::string seqB;
     double matrix_max;
+    int pos_max;
 
     double similarityScore(char a, char b);
     double findMax(const double array[], int length);

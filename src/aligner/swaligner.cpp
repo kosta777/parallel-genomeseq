@@ -31,10 +31,13 @@ void SWAligner::calculateScore() {
     }
   }
 
+  int** I_i = new int* [lengthSeqA+1];
+  int** I_j = new int* [lengthSeqA+1];
+  for (int i=0; i<=lengthSeqA; i++){
+    I_i[i] = new int[lengthSeqB+1];
+    I_j[i] = new int[lengthSeqB+1];
+  }
   double traceback[4];
-  int I_i[lengthSeqA + 1][lengthSeqB + 1];
-  int I_j[lengthSeqA + 1][lengthSeqB + 1];
-
 
   //start populating matrix
   for (int i = 1; i <= lengthSeqA; i++) {
@@ -115,6 +118,15 @@ void SWAligner::calculateScore() {
     tick++;
   }
 
+  for (int i=0;i<lengthSeqA;i++){
+    delete [] I_i[i];
+    delete [] I_j[i];
+  }
+  delete [] I_i;
+  delete [] I_j;
+
+  pos_max = current_j;
+
 #ifdef DEBUG
   //print the consensus sequences
   cout<<endl<<" "<<endl;
@@ -156,3 +168,6 @@ double SWAligner::getScore() const {
   return matrix_max;
 }
 
+int SWAligner::getPos() const {
+  return pos_max;
+}

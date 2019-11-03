@@ -34,15 +34,15 @@ void SWAligner::calculateScore() {
   int ind; //max index of traceback
 
   //start populating matrix
+  //https://github.com/ding-lab/pindel2/blob/master/src/smith_waterman_alignment.cpp
   for (int i = 1; i <= lengthSeqA; i++) {
-    for (int j = 0; j <= lengthSeqB; j++) {
+    for (int j = 1; j <= lengthSeqB; j++) {
 #ifdef DEBUG
       cout << i << " " << j << endl;
 #endif
-      traceback(0) =
-          ((j - 1 < 0) ? 0 : matrix(i - 1, j - 1)) + similarityScore(seqA[i - 1], seqB[j - 1]); //[TODO]: TEMPORARY FIX
+      traceback(0) = matrix(i - 1, j - 1) + similarityScore(seqA[i - 1], seqB[j - 1]);
       traceback(1) = matrix(i - 1, j) + penalty;
-      traceback(2) = ((j - 1 < 0) ? 0 : matrix(i, j - 1)) + penalty; //[TODO]: TEMPORARY FIX
+      traceback(2) = matrix(i, j - 1) + penalty;
       traceback(3) = 0;
       matrix(i, j) = traceback.maxCoeff(&ind);
       switch (ind) {
@@ -85,11 +85,11 @@ void SWAligner::calculateScore() {
 
   while (((current_i != next_i) || (current_j != next_j)) && (next_j != 0) && (next_i != 0)) {
 
-    if (next_i == current_i) consensus_a[tick] = '-';                  // deletion in A
-    else consensus_a[tick] = seqA[current_i - 1];   // match/mismatch in A
+    if (next_i == current_i) consensus_a[tick] = '-';  // deletion in A
+    else consensus_a[tick] = seqA[current_i - 1];      // match/mismatch in A
 
-    if (next_j == current_j) consensus_b[tick] = '-';                  // deletion in B
-    else consensus_b[tick] = seqB[current_j - 1];   // match/mismatch in B
+    if (next_j == current_j) consensus_b[tick] = '-';  // deletion in B
+    else consensus_b[tick] = seqB[current_j - 1];      // match/mismatch in B
 
     current_i = next_i;
     current_j = next_j;

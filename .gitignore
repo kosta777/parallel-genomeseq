@@ -1,0 +1,9 @@
+build/*
+obj/*
+bin/*
+debug/*
+.vscode/*
+.idea/*
+*.swp
+data/*.csv
+!build/eigen-3.3.7.zip

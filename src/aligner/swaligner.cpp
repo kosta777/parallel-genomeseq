@@ -38,9 +38,9 @@ void SWAligner::calculateScore() {
 #ifdef DEBUG
       cout << i << " " << j << endl;
 #endif
-      traceback(0) = matrix(i - 1, j - 1) + similarityScore(seqA[i - 1], seqB[j - 1]);
+      traceback(0) = ((j-1<0)?0:matrix(i - 1, j - 1)) + similarityScore(seqA[i - 1], seqB[j - 1]); //[TODO]: TEMPORARY FIX
       traceback(1) = matrix(i - 1, j) + penalty;
-      traceback(2) = matrix(i, j - 1) + penalty;
+      traceback(2) = ((j-1<0)?0:matrix(i, j - 1)) + penalty; //[TODO]: TEMPORARY FIX
       traceback(3) = 0;
       matrix(i, j) = traceback.maxCoeff();
       switch (ind) {

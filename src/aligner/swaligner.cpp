@@ -39,9 +39,10 @@ void SWAligner::calculateScore() {
 #ifdef DEBUG
       cout << i << " " << j << endl;
 #endif
-      traceback(0) = ((j-1<0)?0:matrix(i - 1, j - 1)) + similarityScore(seqA[i - 1], seqB[j - 1]); //[TODO]: TEMPORARY FIX
+      traceback(0) =
+          ((j - 1 < 0) ? 0 : matrix(i - 1, j - 1)) + similarityScore(seqA[i - 1], seqB[j - 1]); //[TODO]: TEMPORARY FIX
       traceback(1) = matrix(i - 1, j) + penalty;
-      traceback(2) = ((j-1<0)?0:matrix(i, j - 1)) + penalty; //[TODO]: TEMPORARY FIX
+      traceback(2) = ((j - 1 < 0) ? 0 : matrix(i, j - 1)) + penalty; //[TODO]: TEMPORARY FIX
       traceback(3) = 0;
       matrix(i, j) = traceback.maxCoeff(&ind);
       switch (ind) {
@@ -57,8 +58,7 @@ void SWAligner::calculateScore() {
         case 3:I_i(i, j) = i;
           I_j(i, j) = j;
           break;
-        default:
-          throw; //ind<=3
+        default:throw; //ind<=3
       }
     }
   }
@@ -101,14 +101,16 @@ void SWAligner::calculateScore() {
 
 #ifdef DEBUG
   //print the consensus sequences
-  cout<<endl<<" "<<endl;
-  cout<<"Alignment:"<<endl<<endl;
-  for(int i=0;i<lengthSeqA;i++){cout<<seqA[i];}; cout<<"  and"<<endl;
-  for(int i=0;i<lengthSeqB;i++){cout<<seqB[i];}; cout<<endl<<endl;
-  for(int i=tick-1;i>=0;i--) cout<<consensus_a[i];
-  cout<<endl;
-  for(int j=tick-1;j>=0;j--) cout<<consensus_b[j];
-  cout<<endl;
+  cout << endl << " " << endl;
+  cout << "Alignment:" << endl << endl;
+  for (int i = 0; i < lengthSeqA; i++) { cout << seqA[i]; };
+  cout << "  and" << endl;
+  for (int i = 0; i < lengthSeqB; i++) { cout << seqB[i]; };
+  cout << endl << endl;
+  for (int i = tick - 1; i >= 0; i--) cout << consensus_a[i];
+  cout << endl;
+  for (int j = tick - 1; j >= 0; j--) cout << consensus_b[j];
+  cout << endl;
 #endif
 
 }

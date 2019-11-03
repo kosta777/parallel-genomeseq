@@ -1,12 +1,7 @@
 #include <iostream>
-#include <fstream>
-#include <cstdlib>
 #include <string>
-#include <cmath>
 #include <Eigen/Dense>
-
 #include "swaligner.h"
-#include "localaligner.h"
 
 using namespace std;
 
@@ -101,12 +96,8 @@ void SWAligner::calculateScore() {
 
 #ifdef DEBUG
   //print the consensus sequences
-  cout << endl << " " << endl;
-  cout << "Alignment:" << endl << endl;
-  for (int i = 0; i < lengthSeqA; i++) { cout << seqA[i]; };
-  cout << "  and" << endl;
-  for (int i = 0; i < lengthSeqB; i++) { cout << seqB[i]; };
-  cout << endl << endl;
+  cout << "\n\nAlignment of:\n" << seqA << ",\n" << seqB << endl;
+  cout << "Consensus: \n";
   for (int i = tick - 1; i >= 0; i--) cout << consensus_a[i];
   cout << endl;
   for (int j = tick - 1; j >= 0; j--) cout << consensus_b[j];

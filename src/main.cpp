@@ -7,8 +7,12 @@
 #include <vector>
 
 int main(int argc, char** argv) {
-  std::string argv1 = argv[1];
-  if (argv1.compare("swa")==0) {
+  std::string argv1 = (argc == 2) ? argv[1] : "";
+  if (argc == 1) {
+    std::cout << "No argument given, valid argument: swa, sw_solve_small" << std::endl;
+    return -1;
+  }
+  if (argv1 == "swa") {
     std::cout << "Hello world" << std::endl;
 
     std::string s1 = "Montag";
@@ -21,9 +25,7 @@ int main(int argc, char** argv) {
     la->calculateScore();
     std::cout << la->getScore() << std::endl;
     std::cout << la->getPos() << std::endl;
-  }
-
-  else if (argv1.compare("sw_solve_small") ==0){
+  } else if (argv1 == "sw_solve_small") {
     std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
     std::string input_file_path = "data/data_small_ground_truth.csv";
     std::string output_file_path = "data/align_output.csv";
@@ -61,7 +63,7 @@ int main(int argc, char** argv) {
     std::string input_header_line;
     std::string output_header_line;
 
-    int score_tmp;
+    double score_tmp;
     int pos_pred_tmp;
     i=0;
     while (std::getline(align_input,input_line)){

@@ -4,6 +4,7 @@
 #include <string>
 #include <cmath>
 #include <sys/time.h>
+#include <Eigen/Dense>
 
 #include "swaligner.h"
 #include "localaligner.h"
@@ -24,20 +25,12 @@ void SWAligner::calculateScore() {
   int lengthSeqB = seqB.length();
 
   // initialize matrix
-  double matrix[lengthSeqA + 1][lengthSeqB + 1];
-  for (int i = 0; i <= lengthSeqA; i++) {
-    for (int j = 0; j <= lengthSeqB; j++) {
-      matrix[i][j] = 0;
-    }
-  }
+  auto matrix = Eigen::MatrixXd(lengthSeqA + 1, lengthSeqB + 1);
+  matrix.setZero();
 
-  int** I_i = new int* [lengthSeqA+1];
-  int** I_j = new int* [lengthSeqA+1];
-  for (int i=0; i<=lengthSeqA; i++){
-    I_i[i] = new int[lengthSeqB+1];
-    I_j[i] = new int[lengthSeqB+1];
-  }
-  double traceback[4];
+  auto I_i = Eigen::MatrixXi(lengthSeqA + 1, lengthSeqB + 1);
+  auto I_j = Eigen::MatrixXi(lengthSeqA + 1, lengthSeqB + 1);
+  auto traceback = Eigen::VectorXd(4);
 
   //start populating matrix
   for (int i = 1; i <= lengthSeqA; i++) {
@@ -45,23 +38,23 @@ void SWAligner::calculateScore() {
 #ifdef DEBUG
       cout << i << " " << j << endl;
 #endif
-      traceback[0] = matrix[i - 1][j - 1] + similarityScore(seqA[i - 1], seqB[j - 1]);
-      traceback[1] = matrix[i - 1][j] + penalty;
-      traceback[2] = matrix[i][j - 1] + penalty;
-      traceback[3] = 0;
-      matrix[i][j] = findMax(traceback, 4);
+      traceback(0) = matrix(i - 1, j - 1) + similarityScore(seqA[i - 1], seqB[j - 1]);
+      traceback(1) = matrix(i - 1, j) + penalty;
+      traceback(2) = matrix(i, j - 1) + penalty;
+      traceback(3) = 0;
+      matrix(i, j) = traceback.maxCoeff();
       switch (ind) {
-        case 0:I_i[i][j] = i - 1;
-          I_j[i][j] = j - 1;
+        case 0:I_i(i, j) = i - 1;
+          I_j(i, j) = j - 1;
           break;
-        case 1:I_i[i][j] = i - 1;
-          I_j[i][j] = j;
+        case 1:I_i(i, j) = i - 1;
+          I_j(i, j) = j;
           break;
-        case 2:I_i[i][j] = i;
-          I_j[i][j] = j - 1;
+        case 2:I_i(i, j) = i;
+          I_j(i, j) = j - 1;
           break;
-        case 3:I_i[i][j] = i;
-          I_j[i][j] = j;
+        case 3:I_i(i, j) = i;
+          I_j(i, j) = j;
           break;
       }
     }
@@ -69,27 +62,11 @@ void SWAligner::calculateScore() {
 
 #ifdef DEBUG
   // print the scoring matrix to console
-  for(int i=1;i<lengthSeqA;i++)
-  {
-      for(int j=1;j<lengthSeqB;j++)
-      {
-          cout << matrix[i][j] << " ";
-      }
-      cout << endl;
-  }
+  cout << matrix << endl;
 #endif
   // find the max score in the matrix
-  matrix_max = 0;
   int i_max = 0, j_max = 0;
-  for (int i = 1; i < lengthSeqA; i++) {
-    for (int j = 1; j < lengthSeqB; j++) {
-      if (matrix[i][j] > matrix_max) {
-        matrix_max = matrix[i][j];
-        i_max = i;
-        j_max = j;
-      }
-    }
-  }
+  matrix_max = matrix.maxCoeff(&i_max, &j_max);
 
 #ifdef DEBUG
   cout << "Max score in the matrix is " << matrix_max << endl;
@@ -98,8 +75,8 @@ void SWAligner::calculateScore() {
   // traceback
 
   int current_i = i_max, current_j = j_max;
-  int next_i = I_i[current_i][current_j];
-  int next_j = I_j[current_i][current_j];
+  int next_i = I_i(current_i, current_j);
+  int next_j = I_j(current_i, current_j);
   int tick = 0;
   char consensus_a[lengthSeqA + lengthSeqB + 2], consensus_b[lengthSeqA + lengthSeqB + 2];
 
@@ -113,18 +90,10 @@ void SWAligner::calculateScore() {
 
     current_i = next_i;
     current_j = next_j;
-    next_i = I_i[current_i][current_j];
-    next_j = I_j[current_i][current_j];
+    next_i = I_i(current_i, current_j);
+    next_j = I_j(current_i, current_j);
     tick++;
   }
-
-  for (int i=0;i<lengthSeqA;i++){
-    delete [] I_i[i];
-    delete [] I_j[i];
-  }
-  delete [] I_i;
-  delete [] I_j;
-
   pos_max = current_j;
 
 #ifdef DEBUG
@@ -149,19 +118,6 @@ double SWAligner::similarityScore(char a, char b) {
     result = penalty;
   }
   return result;
-}
-
-double SWAligner::findMax(const double array[], int length) {
-  double max = array[0];
-  ind = 0;
-
-  for (int i = 1; i < length; i++) {
-    if (array[i] > max) {
-      max = array[i];
-      ind = i;
-    }
-  }
-  return max;
 }
 
 double SWAligner::getScore() const {

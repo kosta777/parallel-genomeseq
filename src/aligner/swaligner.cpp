@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <string>
 #include <cmath>
-#include <sys/time.h>
 #include <Eigen/Dense>
 
 #include "swaligner.h"
@@ -32,6 +31,8 @@ void SWAligner::calculateScore() {
   auto I_j = Eigen::MatrixXi(lengthSeqA + 1, lengthSeqB + 1);
   auto traceback = Eigen::VectorXd(4);
 
+  int ind; //max index of traceback
+
   //start populating matrix
   for (int i = 1; i <= lengthSeqA; i++) {
     for (int j = 0; j <= lengthSeqB; j++) {
@@ -42,7 +43,7 @@ void SWAligner::calculateScore() {
       traceback(1) = matrix(i - 1, j) + penalty;
       traceback(2) = ((j-1<0)?0:matrix(i, j - 1)) + penalty; //[TODO]: TEMPORARY FIX
       traceback(3) = 0;
-      matrix(i, j) = traceback.maxCoeff();
+      matrix(i, j) = traceback.maxCoeff(&ind);
       switch (ind) {
         case 0:I_i(i, j) = i - 1;
           I_j(i, j) = j - 1;
@@ -56,6 +57,8 @@ void SWAligner::calculateScore() {
         case 3:I_i(i, j) = i;
           I_j(i, j) = j;
           break;
+        default:
+          throw; //ind<=3
       }
     }
   }

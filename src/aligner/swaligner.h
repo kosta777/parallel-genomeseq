@@ -12,7 +12,6 @@ class SWAligner : public LocalAligner {
     double getScore() const override;
     int getPos() const override;
   private:
-    int ind;
     double penalty = -4;
     std::string seqA;
     std::string seqB;
@@ -20,6 +19,5 @@ class SWAligner : public LocalAligner {
     int pos_max;
 
     double similarityScore(char a, char b);
-    double findMax(const double array[], int length);
 };
 #endif

@@ -1,4 +1,5 @@
 #include "smithwatermanlinear.h"
+#include "../similaritymatrix/similaritymatrix.h"
 #include <functional>
 #include <iostream>
 

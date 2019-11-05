@@ -69,6 +69,6 @@ void Similarity_Matrix::iterate_anti_diagonal(std::function<double(const array_t
     }
 }
 
-const array_type& Similarity_Matrix::getMatrix() const  {
+const array_type& Similarity_Matrix::get_matrix() const  {
     return similarity_matrix;
 }

@@ -1,7 +1,9 @@
 #include "smithwatermanlinear.h"
-#include "../similaritymatrix/similaritymatrix.h"
+
 #include <functional>
 #include <iostream>
+
+#include "../similaritymatrix/similaritymatrix.h"
 
 typedef boost::multi_array<double, 2> array_type;
 typedef array_type::index index;
@@ -11,7 +13,7 @@ SWAligner::SWAligner(const std::string& first_sequence, const std::string& secon
     sequence_x(first_sequence), sequence_y(second_sequence), similarity_matrix(first_sequence, second_sequence) {}
 
 void SWAligner::traceback(index_tupel idx) {
-    const array_type& matrix = similarity_matrix.getMatrix();
+    const array_type& matrix = similarity_matrix.get_matrix();
 
     // stopping criterion
     index index_x = idx[0];
@@ -84,7 +86,7 @@ void SWAligner::calculate_similarity_matrix() {
     similarity_matrix.iterate_anti_diagonal(cb);
 }
 
-void SWAligner::calculateScore() {
+double SWAligner::calculateScore() {
     calculate_similarity_matrix();
 
     similarity_matrix.print_matrix();
@@ -98,10 +100,8 @@ void SWAligner::calculateScore() {
 
     std::cout << sequence_x << std::endl;
     std::cout << sequence_y << std::endl;
-}
 
-double SWAligner::getScore() const {
-    return 1.0;
+    return similarity_matrix.get_matrix()(max_idx);
 }
 
 int SWAligner::getPos() const {

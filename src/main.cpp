@@ -2,6 +2,7 @@
 #include <string>
 #include <algorithm> 
 #include <vector>
+
 #include "aligner/localaligner.h"
 #include "aligner/smithwatermanlinear.h"
 

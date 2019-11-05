@@ -2,7 +2,9 @@
 #define _SMITHWATERMAN_LINEAR_H_
 
 #include <string>
+
 #include "boost/multi_array.hpp"
+
 #include "localaligner.h"
 #include "../similaritymatrix/similaritymatrix.h"
 
@@ -15,8 +17,11 @@ class SWAligner : public LocalAligner {
         SWAligner();
         SWAligner(const std::string& first_sequence, const std::string& second_sequence);
 
-        void calculateScore() override;
-        double getScore() const override;
+        /*
+         * Maximum score in similarity matrix.
+         */
+        double calculateScore() override;
+
         int getPos() const override;
     private:
         std::string sequence_x;

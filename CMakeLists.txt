@@ -28,7 +28,6 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src/similaritymatrix SIMILARITY_MATRI
 add_library(libsimilaritymatrix ${SIMILARITY_MATRIX_SRCS})
 include_directories(${PROJECT_SOURCE_DIR}/src/similaritymatrix)
 
-
 add_executable(${TARGET_NAME} src/main.cpp)
 target_link_libraries(${TARGET_NAME} PRIVATE libaligner)
 target_link_libraries(${TARGET_NAME} PRIVATE libsimilaritymatrix)

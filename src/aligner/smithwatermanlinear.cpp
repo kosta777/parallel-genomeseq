@@ -12,7 +12,7 @@ typedef boost::array<index, 2> index_tupel;
 SWAligner::SWAligner(const std::string& first_sequence, const std::string& second_sequence) :
     sequence_x(first_sequence), sequence_y(second_sequence), similarity_matrix(first_sequence, second_sequence) {}
 
-void SWAligner::traceback(index_tupel idx) {
+void SWAligner::traceback(index_tupel idx, unsigned int& preliminary_pos) {
     const array_type& matrix = similarity_matrix.get_matrix();
 
     // stopping criterion
@@ -21,6 +21,8 @@ void SWAligner::traceback(index_tupel idx) {
     if(matrix[index_x-1][index_y-1] == 0) {
         sequence_x.insert(index_x-1, "(");
         sequence_y.insert(index_y-1, "(");
+
+        pos = index_y;
         return;
     }
 
@@ -30,17 +32,17 @@ void SWAligner::traceback(index_tupel idx) {
 
     // move north-west
     if((n1 >= n2) && (n1 >= n3)) {
-        traceback({{index_x-1, index_y-1}});
+        traceback({{index_x-1, index_y-1}}, preliminary_pos);
     }
     // move west
     else if ((n2 >= n1) && (n2 >= n3)) {
         sequence_x.insert(index_x, "-");
-        traceback({{index_x, index_y-1}});
+        traceback({{index_x, index_y-1}}, preliminary_pos);
     }
     // move north
     else {
         sequence_y.insert(index_y, "-");
-        traceback({{index_x-1, index_y}});
+        traceback({{index_x-1, index_y}}, preliminary_pos);
     }
 }
 
@@ -96,7 +98,8 @@ double SWAligner::calculateScore() {
     sequence_x.insert(max_idx[0], ")");
     sequence_y.insert(max_idx[1], ")");
 
-    traceback(max_idx);
+    traceback(max_idx, pos);
+    std::cout << "POS: " << pos << std::endl;
 
     std::cout << sequence_x << std::endl;
     std::cout << sequence_y << std::endl;
@@ -104,6 +107,6 @@ double SWAligner::calculateScore() {
     return similarity_matrix.get_matrix()(max_idx);
 }
 
-int SWAligner::getPos() const {
-    return 3;
+unsigned int SWAligner::getPos() const {
+    return pos;
 }

@@ -15,23 +15,31 @@ typedef boost::array<index, 2> index_tupel;
 class SWAligner : public LocalAligner {
     public:
         SWAligner();
-        SWAligner(const std::string& first_sequence, const std::string& second_sequence);
+        SWAligner(const std::string&, const std::string&);
 
         /*
          * Maximum score in similarity matrix.
          */
         double calculateScore() override;
 
-        int getPos() const override;
+        /*
+         * Position of the first matched position in sequence_x. Corresponds to POS in SAM file.
+         * 
+         * @return 1-based (as opposed to standard CS 0-based) counter.
+         */
+        unsigned int getPos() const override;
+
     private:
+        unsigned int pos;
+
         std::string sequence_x;
         std::string sequence_y;
         
         Similarity_Matrix similarity_matrix;
 
-        void traceback(index_tupel idx);
+        void traceback(index_tupel, unsigned int&);
         void calculate_similarity_matrix();
-        double on_each_iteration(const array_type& matrix, index local_i, index k);
+        double on_each_iteration(const array_type&, index, index);
 };
 
 #endif

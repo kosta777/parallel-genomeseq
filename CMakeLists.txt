@@ -5,7 +5,7 @@ include("cmake/clang_tidy.cmake")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CC_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb ")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -pedantic -Wextra -g -ggdb ")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17")
 
 project(GENOMESEQ)

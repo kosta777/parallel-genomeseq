@@ -21,6 +21,7 @@ class SWAligner : public LocalAligner {
     private:
         std::string sequence_x;
         std::string sequence_y;
+        
         Similarity_Matrix similarity_matrix;
 
         void traceback(index_tupel idx);

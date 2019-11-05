@@ -9,13 +9,8 @@ typedef array_type::index index;
 typedef boost::array<index, 2> index_tupel;
 
 
-Similarity_Matrix::Similarity_Matrix(const std::string& sequence_x, const std::string& sequence_y) {
-
-    const unsigned int dim_x = sequence_x.size() + 1;
-    const unsigned int dim_y = sequence_y.size() + 1;
-
-    array_type similarity_matrix(boost::extents[dim_x][dim_y]);
-}
+Similarity_Matrix::Similarity_Matrix(const std::string& sequence_x, const std::string& sequence_y) :
+    similarity_matrix(boost::extents[sequence_x.size() + 1][sequence_y.size() + 1]) {}
 
 index_tupel Similarity_Matrix::find_index_of_maximum() const {
     int distance = std::distance(
@@ -38,8 +33,11 @@ index_tupel Similarity_Matrix::find_index_of_maximum() const {
 }
 
 void Similarity_Matrix::print_matrix() const {
-    for(index x = 0; x < similarity_matrix.shape()[0]; x++) {
-        for(index y = 0; y < similarity_matrix.shape()[1]; y++) {
+    index dim_x = similarity_matrix.shape()[0];
+    index dim_y = similarity_matrix.shape()[1];
+
+    for(index x = 0; x < dim_x; x++) {
+        for(index y = 0; y < dim_y; y++) {
             std::cout << similarity_matrix[x][y] << "\t";
         }
         std::cout << "\n";
@@ -69,7 +67,7 @@ void Similarity_Matrix::iterate_anti_diagonal(std::function<double(const array_t
             --local_i;
         }
     }
-};
+}
 
 const array_type& Similarity_Matrix::getMatrix() const  {
     return similarity_matrix;

@@ -7,11 +7,8 @@ typedef boost::multi_array<double, 2> array_type;
 typedef array_type::index index;
 typedef boost::array<index, 2> index_tupel;
 
-SWAligner::SWAligner(const std::string& first_sequence, const std::string& second_sequence) {
-    sequence_x = first_sequence;
-    sequence_y = second_sequence;
-    Similarity_Matrix similarity_matrix(first_sequence, second_sequence);
-}
+SWAligner::SWAligner(const std::string& first_sequence, const std::string& second_sequence) :
+    sequence_x(first_sequence), sequence_y(second_sequence), similarity_matrix(first_sequence, second_sequence) {}
 
 void SWAligner::traceback(index_tupel idx) {
     const array_type& matrix = similarity_matrix.getMatrix();
@@ -101,4 +98,12 @@ void SWAligner::calculateScore() {
 
     std::cout << sequence_x << std::endl;
     std::cout << sequence_y << std::endl;
+}
+
+double SWAligner::getScore() const {
+    return 1.0;
+}
+
+int SWAligner::getPos() const {
+    return 3;
 }

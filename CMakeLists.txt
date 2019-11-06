@@ -24,15 +24,37 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)
 add_library(libaligner ${ALIGNER_SRCS})
 include_directories(${PROJECT_SOURCE_DIR}/src/aligner)
 
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/similaritymatrix SIMILARITY_MATRIX_SRCS)
-add_library(libsimilaritymatrix ${SIMILARITY_MATRIX_SRCS})
-include_directories(${PROJECT_SOURCE_DIR}/src/similaritymatrix)
+# googletest
+configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif()
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
+                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
+                 EXCLUDE_FROM_ALL)
+if (CMAKE_VERSION VERSION_LESS 2.8.11)
+  include_directories("${gtest_SOURCE_DIR}/include")
+endif()
 
 add_executable(${TARGET_NAME} src/main.cpp)
 target_link_libraries(${TARGET_NAME} PRIVATE libaligner)
-target_link_libraries(${TARGET_NAME} PRIVATE libsimilaritymatrix)
 target_link_libraries(${TARGET_NAME} PRIVATE warning_flags)
+target_link_libraries(${TARGET_NAME} PRIVATE gtest_main)
 #target_compile_definitions(${TARGET_NAME} PUBLIC -D_USE_MATH_DEFINES)
+
+add_test(NAME example_test COMMAND example)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 

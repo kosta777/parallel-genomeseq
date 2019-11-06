@@ -6,7 +6,7 @@
 #include "boost/multi_array.hpp"
 
 #include "localaligner.h"
-#include "../similaritymatrix/similaritymatrix.h"
+#include "similaritymatrix.h"
 
 typedef boost::multi_array<double, 2> array_type;
 typedef array_type::index index;

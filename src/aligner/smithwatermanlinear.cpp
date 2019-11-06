@@ -3,7 +3,7 @@
 #include <functional>
 #include <iostream>
 
-#include "../similaritymatrix/similaritymatrix.h"
+#include "similaritymatrix.h"
 
 typedef boost::multi_array<double, 2> array_type;
 typedef array_type::index index;
@@ -46,17 +46,9 @@ void SWAligner::traceback(index_tupel idx, unsigned int& preliminary_pos) {
     }
 }
 
-double scoring_function(const char& a, const char& b) {
-    if(a == b) {
-        return 3;
-    }
-    else {
-        return -3;
-    }
-}
-
 double calculate_scoring_Smith_Waterman_linear(const double& west, const double& north, const double& north_west, const char& a, const char& b) {
     const double gap_penalty = 2;
+    auto scoring_function = [](const char& a, const char& b) { return a == b ? 3.0 : -3.0; };
     std::vector<double> v {
       north_west + scoring_function(a, b), 
       west - gap_penalty, 

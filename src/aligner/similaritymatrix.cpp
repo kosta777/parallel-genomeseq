@@ -4,11 +4,6 @@
 #include <string>
 #include <algorithm> 
 
-typedef boost::multi_array<double, 2> array_type;
-typedef array_type::index index;
-typedef boost::array<index, 2> index_tupel;
-
-
 Similarity_Matrix::Similarity_Matrix(const std::string& sequence_x, const std::string& sequence_y) :
     similarity_matrix(boost::extents[sequence_x.size() + 1][sequence_y.size() + 1]) {}
 

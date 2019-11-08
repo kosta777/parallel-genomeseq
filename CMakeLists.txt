@@ -13,6 +13,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(TARGET_NAME parseqal)
 option(DEBUG "debug mode" OFF)
 set(CMAKE_BUILD_TYPE "Release")
+include("cmake/GetEigen.cmake")
 
 if (DEBUG)
   set(CMAKE_BUILD_TYPE "Debug")
@@ -22,6 +23,7 @@ endif ()
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)
 add_library(libaligner ${ALIGNER_SRCS})
+target_link_libraries(libaligner PUBLIC Eigen)
 include_directories(${PROJECT_SOURCE_DIR}/src/aligner)
 
 # googletest
@@ -49,6 +51,7 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 
 add_executable(${TARGET_NAME} src/main.cpp)
+target_link_libraries(${TARGET_NAME} PUBLIC Eigen)
 target_link_libraries(${TARGET_NAME} PRIVATE libaligner)
 target_link_libraries(${TARGET_NAME} PRIVATE warning_flags)
 target_link_libraries(${TARGET_NAME} PRIVATE gtest_main)

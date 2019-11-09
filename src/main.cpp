@@ -14,6 +14,6 @@ int main() {
 
   LocalAligner *la = new SWAligner(sequence_x, sequence_y);
   la->calculateScore();
-
+  
   return 0;
 }

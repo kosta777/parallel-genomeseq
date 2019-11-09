@@ -1,20 +1,19 @@
 #include <iostream>
-#include "localaligner.h"
-#include "swaligner.h"
-
 #include <string>
+#include <algorithm> 
+#include <vector>
+
+#include "aligner/localaligner.h"
+#include "aligner/smithwatermanlinear.h"
+
 
 int main() {
-  std::cout << "Hello world" << std::endl;
+  // https://en.wikipedia.org/wiki/Smith%E2%80%93Waterman_algorithm#/media/File:Smith-Waterman-Algorithm-Example-Step2.png
+  std::string sequence_x = "GGTTGACTA";
+  std::string sequence_y = "TGTTACGG";
 
-  std::string s1 = "Montag";
-  std::string s2 = "Donnerstag";
-
-  LocalAligner *la = new SWAligner();
-  la->setFirstSequence(s1);
-  la->setSecondSequence(s2);
+  LocalAligner *la = new SWAligner(sequence_x, sequence_y);
   la->calculateScore();
-  std::cout << la->getScore() << std::endl;
 
   return 0;
 }

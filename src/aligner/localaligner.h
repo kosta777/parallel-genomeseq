@@ -5,11 +5,8 @@
 
 class LocalAligner {
   public:
-    virtual void setFirstSequence(std::string) = 0;
-    virtual void setSecondSequence(std::string) = 0;
-
-    virtual void calculateScore() = 0;
-    virtual double getScore() const = 0;
+    virtual double calculateScore() = 0;
+    virtual unsigned int getPos() const = 0;
 };
 
 #endif

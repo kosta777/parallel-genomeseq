@@ -54,7 +54,18 @@ Run the binary `parsequal` in the `bin` directory.
 -Generate a modified input file with fields: index, QNAME, SEQ, POS (POS="true" alignment positions extracted from a SAM file), solve the small dataset using Smith-Waterman, and evaluate the alignment result wrt "true" positions using a py script:
 
 ```bash
+#sw_solve_small
+cd build
+cmake ..
+make sw_solve_small
+cd ../py
 python reader.py gen_input
-parseqal sw_solve_small
-python eval.py sw_solve_small
+cd ..
+./bin/sw_solve_small
+python py/eval.py sw_solve_small
+#test
+cd build
+cmake ..
+make test
+../bin/tests
 ```

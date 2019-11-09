@@ -6,7 +6,6 @@
 typedef std::pair<Eigen::Index, Eigen::Index> index_tuple;
 
 class Similarity_Matrix {
-
     public:
         // unimplemented to prevent implicit construction
         Similarity_Matrix();

@@ -8,7 +8,6 @@
 
 
 int main() {
-
   // https://en.wikipedia.org/wiki/Smith%E2%80%93Waterman_algorithm#/media/File:Smith-Waterman-Algorithm-Example-Step2.png
   std::string sequence_x = "GGTTGACTA";
   std::string sequence_y = "TGTTACGG";

@@ -56,7 +56,7 @@ target_link_libraries(tests GTest)
 
 if (USEMPI)
   target_link_libraries(${TARGET_NAME} PUBLIC ${MPI_CXX_LIBRARIES})
-  target_link_libraries(tests PUBLIC ${MPI_CXX_LIBRARIES})
+  target_link_libraries(tests ${MPI_CXX_LIBRARIES})
 endif ()
 
 if(CLANG_TIDY_EXE)

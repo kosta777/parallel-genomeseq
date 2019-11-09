@@ -2,6 +2,7 @@
 #define _SIMILARITY_MATRIX_H_
 
 #include <Eigen/Dense>
+#include <string_view>
 
 typedef std::pair<Eigen::Index, Eigen::Index> index_tuple;
 

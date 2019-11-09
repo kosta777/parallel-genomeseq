@@ -1,7 +1,5 @@
 #include "similaritymatrix.h"
-
 #include <iostream>
-#include <string>
 #include <algorithm> 
 #include <Eigen/Dense>
 

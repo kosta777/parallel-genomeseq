@@ -4,7 +4,7 @@
 #include <string>
 
 #include <Eigen/Dense>
-
+#include <string_view>
 #include "localaligner.h"
 #include "similaritymatrix.h"
 
@@ -12,7 +12,8 @@ typedef std::pair<Eigen::Index, Eigen::Index> index_tuple;
 
 class SWAligner : public LocalAligner {
     public:
-    SWAligner(std::string_view, std::string_view);
+        SWAligner();
+        SWAligner(std::string_view, std::string_view);
 
         /*
          * Maximum score in similarity matrix.
@@ -26,7 +27,6 @@ class SWAligner : public LocalAligner {
          */
         unsigned int getPos() const override;
 
-    private:
         unsigned int pos;
 
         std::string sequence_x;
@@ -34,6 +34,7 @@ class SWAligner : public LocalAligner {
         
         Similarity_Matrix similarity_matrix;
 
+  private:
         void traceback(index_tuple, unsigned int&);
         void calculate_similarity_matrix();
 };

@@ -7,6 +7,7 @@
 class LocalAligner {
   public:
     virtual double calculateScore() = 0;
+    virtual double getScore() const = 0;
     virtual unsigned int getPos() const = 0;
     virtual std::string_view getConsensus_x() const = 0;
     virtual std::string_view getConsensus_y() const = 0;

@@ -5,6 +5,7 @@
 
 SWAligner::SWAligner(std::string_view first_sequence, std::string_view second_sequence) :
     pos(0),
+    max_score(-1),
     sequence_x(first_sequence),
     sequence_y(second_sequence),
     similarity_matrix(first_sequence, second_sequence),
@@ -14,13 +15,14 @@ SWAligner::SWAligner(std::string_view first_sequence,
                      std::string_view second_sequence,
                      std::function<double(const char &, const char &)> &&scoring_function) :
     pos(0),
+    max_score(-1),
     sequence_x(first_sequence),
     sequence_y(second_sequence),
     similarity_matrix(first_sequence, second_sequence),
     scoring_function(std::move(scoring_function)) {}
 
 void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
-  const Eigen::MatrixXd &matrix = similarity_matrix.get_matrix();
+  auto matrix = similarity_matrix.get_matrix();
 
   // stopping criterion
   auto [index_x, index_y] = idx;
@@ -32,9 +34,9 @@ void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
     return;
   }
 
-  double n1 = matrix(index_x - 1, index_y - 1);
-  double n2 = matrix(index_x, index_y - 1);
-  double n3 = matrix(index_x - 1, index_y);
+  auto n1 = matrix(index_x - 1, index_y - 1);
+  auto n2 = matrix(index_x, index_y - 1);
+  auto n3 = matrix(index_x - 1, index_y);
 
   // move north-west
   if ((n1 >= n2) && (n1 >= n3)) {
@@ -58,12 +60,12 @@ void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
 void SWAligner::calculate_similarity_matrix() {
   auto cb = [&sequence_x = sequence_x, &sequence_y = sequence_y, &
       scoring_function = scoring_function](const Eigen::MatrixXd &matrix, index_tuple idx) {
-    const char a = sequence_x[idx.first - 1];
-    const char b = sequence_y[idx.second - 1];
-    const double west = matrix(idx.first, idx.second - 1);
-    const double north = matrix(idx.first - 1, idx.second);
-    const double north_west = matrix(idx.first - 1, idx.second - 1);
-    const double gap_penalty = 2;
+    auto a = sequence_x[idx.first - 1];
+    auto b = sequence_y[idx.second - 1];
+    auto west = matrix(idx.first, idx.second - 1);
+    auto north = matrix(idx.first - 1, idx.second);
+    auto north_west = matrix(idx.first - 1, idx.second - 1);
+    auto gap_penalty = 2;
     Eigen::Vector4d v{
         north_west + scoring_function(a, b),
         west - gap_penalty,
@@ -92,5 +94,6 @@ double SWAligner::calculateScore() {
   std::cout << sequence_x << std::endl;
   std::cout << sequence_y << std::endl;
 #endif
-  return similarity_matrix.get_matrix()(max_idx.first, max_idx.second);
+  max_score = similarity_matrix.get_matrix()(max_idx.first, max_idx.second);
+  return max_score;
 }

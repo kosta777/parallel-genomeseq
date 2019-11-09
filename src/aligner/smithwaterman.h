@@ -17,6 +17,8 @@ class SWAligner : public LocalAligner {
      */
     double calculateScore() override;
 
+    double getScore() const override {return max_score;}
+
     /*
      * Position of the first matched position in sequence_x. Corresponds to POS in SAM file.
      *
@@ -29,6 +31,7 @@ class SWAligner : public LocalAligner {
 
   private:
     unsigned int pos;
+    double max_score;
     std::string sequence_x;
     std::string sequence_y;
     Similarity_Matrix similarity_matrix;

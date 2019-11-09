@@ -1,3 +1,4 @@
+#ifdef USEMPI
 #include <gtest/gtest.h>
 #include <mpi.h>
 
@@ -20,4 +21,5 @@ TEST(MPI, Usability) {
   MPI_Finalize();
 
 }
+#endif
 

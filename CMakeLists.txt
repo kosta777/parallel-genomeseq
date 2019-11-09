@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CC_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Og -Wall -pedantic -Wextra -g -ggdb --std=c++17")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17 -flto")
 
 project(GENOMESEQ)
 include("cmake/GetEigen.cmake")

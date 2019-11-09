@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -pedantic -Wextra -g -ggdb "
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17")
 
 project(GENOMESEQ)
+include("cmake/GetEigen.cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(TARGET_NAME parseqal)
 option(DEBUG "debug mode" OFF)
@@ -57,7 +58,9 @@ target_link_libraries(${TARGET_NAME} PRIVATE warning_flags)
 target_link_libraries(${TARGET_NAME} PRIVATE gtest_main)
 #target_compile_definitions(${TARGET_NAME} PUBLIC -D_USE_MATH_DEFINES)
 
-add_test(NAME example_test COMMAND example)
+add_executable(bwt_fm src/bwt_fm.cpp)
+target_link_libraries(bwt_fm PUBLIC Eigen)
+target_link_libraries(bwt_fm PRIVATE libaligner)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 

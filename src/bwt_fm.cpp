@@ -9,7 +9,7 @@
 
 template<class T>
 void printVector(std::vector<std::vector<T>> const &mat) {
-  for (const std::vector<T>& row: mat) {
+  for (const std::vector<T> &row: mat) {
     for (T val: row) {
       std::cout << val << " ";
     }
@@ -172,7 +172,7 @@ class BWTFM {
           i += 1;
         }
         std::cout << "FL creation finished" << std::endl;
-        for (const auto& p : FL_table) {
+        for (const auto &p : FL_table) {
           std::cout << p.first << ", " << p.second << std::endl;
         }
       }
@@ -207,14 +207,14 @@ int main() {
 
   std::cout << "*****************" << std::endl;
   auto myvec = bwt1.FL_table;
-  for (const auto& p : myvec) {
+  for (const auto &p : myvec) {
     std::cout << p.first << ", " << p.second << std::endl;
   }
 
   std::cout << "*********************" << std::endl;
   auto to_sort = myvec;
   std::sort(to_sort.begin(), to_sort.end());
-  for (int i = 0; i < to_sort.size(); i++) {
+  for (unsigned int i = 0; i < to_sort.size(); i++) {
     auto p = to_sort[i];
     std::cout << p.first << ", " << p.second << std::endl;
     std::cout << bwt1.FM_F.at(i) << " , " << bwt1.FM_L.at(i) << std::endl;

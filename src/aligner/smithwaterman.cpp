@@ -23,8 +23,7 @@ void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
   const Eigen::MatrixXd &matrix = similarity_matrix.get_matrix();
 
   // stopping criterion
-  Eigen::Index index_x = idx.first;
-  Eigen::Index index_y = idx.second;
+  auto [index_x, index_y] = idx;
   if (matrix(index_x - 1, index_y - 1) == 0) {
     sequence_x.insert(index_x - 1, "(");
     sequence_y.insert(index_y - 1, "(");

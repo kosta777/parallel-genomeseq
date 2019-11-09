@@ -27,6 +27,26 @@ cd build
 cmake .. -DDEBUG=ON
 ```
 
+### Building MPI version:
+
+```bash
+cd build
+cmake .. -DUSEMPI=ON
+```
+
+## API
+Please go to test file to find usage.
+```C++
+class LocalAligner {
+  public:
+    virtual double calculateScore() = 0;
+    virtual unsigned int getPos() const = 0;
+    virtual std::string_view getConsensus_x() const = 0;
+    virtual std::string_view getConsensus_y() const = 0;
+    virtual const Similarity_Matrix& getSimilarity_matrix() const =0;
+};
+```
+
 ## Usage
 
 Run the binary `parsequal` in the `bin` directory.

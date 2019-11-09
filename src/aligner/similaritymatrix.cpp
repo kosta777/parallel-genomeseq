@@ -3,50 +3,36 @@
 #include <iostream>
 #include <string>
 #include <algorithm> 
+#include <Eigen/Dense>
 
 Similarity_Matrix::Similarity_Matrix(const std::string& sequence_x, const std::string& sequence_y) :
-    similarity_matrix(boost::extents[sequence_x.size() + 1][sequence_y.size() + 1]) {}
+    similarity_matrix(sequence_x.size() + 1, sequence_y.size() + 1) 
+{
+    similarity_matrix.setZero();
+}
+  
+index_tuple Similarity_Matrix::find_index_of_maximum() const {
+    Eigen::Index x = 0, y = 0;
+    similarity_matrix.maxCoeff(&x, &y);
 
-index_tupel Similarity_Matrix::find_index_of_maximum() const {
-    int distance = std::distance(
-        similarity_matrix.origin(), 
-        std::max_element( 
-            similarity_matrix.origin(), 
-            similarity_matrix.origin() + similarity_matrix.num_elements()
-        )
-    );
+    std::cout << "Maximum is " << similarity_matrix(x, y) << " @ (" << x << ", " << y << ")" << std::endl;
 
-    const int dim_y = similarity_matrix.shape()[1];
-    const unsigned int x = distance/dim_y;
-    const unsigned int y = distance - x*dim_y;
-
-    index_tupel idx = {{x, y}};
-
-    std::cout << "Maximum is " << similarity_matrix[x][y] << " @ (" << x << ", " << y << ")" << std::endl;
-
-    return idx;
+    index_tuple max(x, y);
+    return max;
 }
 
 void Similarity_Matrix::print_matrix() const {
-    index dim_x = similarity_matrix.shape()[0];
-    index dim_y = similarity_matrix.shape()[1];
-
-    for(index x = 0; x < dim_x; x++) {
-        for(index y = 0; y < dim_y; y++) {
-            std::cout << similarity_matrix[x][y] << "\t";
-        }
-        std::cout << "\n";
-    }
+    std::cout << similarity_matrix << std::endl;
 }
 
-void Similarity_Matrix::iterate_anti_diagonal(std::function<double(const array_type& matrix, index local_i, index k)> callback) {
-    const unsigned int dim_x = similarity_matrix.shape()[0];
-    const unsigned int dim_y = similarity_matrix.shape()[1];
+void Similarity_Matrix::iterate_anti_diagonal(std::function<double(const Eigen::MatrixXd&, index_tuple)> callback) {
+    const unsigned int dim_x = similarity_matrix.rows();
+    const unsigned int dim_y = similarity_matrix.cols();
 
-    for(index i = 1; i < dim_x + dim_y - 2; ++i) {
-        index local_i = i;
-        index starting_k = 1;
-        index ending_k = i;
+    for(Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i) {
+        Eigen::Index local_i = i;
+        Eigen::Index starting_k = 1;
+        Eigen::Index ending_k = i;
         if(local_i > dim_x - 1) {
             local_i = dim_x - 1;
             starting_k = i - local_i + 1;
@@ -55,15 +41,15 @@ void Similarity_Matrix::iterate_anti_diagonal(std::function<double(const array_t
         if(ending_k > dim_y - 1) {
             ending_k = dim_y - 1;
         }
-        for(index k = starting_k; k <= ending_k; ++k) {
-
-            similarity_matrix[local_i][k] = callback(similarity_matrix, local_i, k);
+        for(Eigen::Index k = starting_k; k <= ending_k; ++k) {
+            index_tuple idx(local_i, k);
+            similarity_matrix(local_i, k) = callback(similarity_matrix, idx);
 
             --local_i;
         }
     }
 }
 
-const array_type& Similarity_Matrix::get_matrix() const  {
+const Eigen::MatrixXd& Similarity_Matrix::get_matrix() const  {
     return similarity_matrix;
 }

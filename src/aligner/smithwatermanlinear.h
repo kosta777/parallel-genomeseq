@@ -3,14 +3,12 @@
 
 #include <string>
 
-#include "boost/multi_array.hpp"
+#include <Eigen/Dense>
 
 #include "localaligner.h"
 #include "similaritymatrix.h"
 
-typedef boost::multi_array<double, 2> array_type;
-typedef array_type::index index;
-typedef boost::array<index, 2> index_tupel;
+typedef std::pair<Eigen::Index, Eigen::Index> index_tuple;
 
 class SWAligner : public LocalAligner {
     public:
@@ -37,9 +35,9 @@ class SWAligner : public LocalAligner {
         
         Similarity_Matrix similarity_matrix;
 
-        void traceback(index_tupel, unsigned int&);
+        void traceback(index_tuple, unsigned int&);
         void calculate_similarity_matrix();
-        double on_each_iteration(const array_type&, index, index);
+        double on_each_iteration(const Eigen::MatrixXd&, index_tuple);
 };
 
 #endif

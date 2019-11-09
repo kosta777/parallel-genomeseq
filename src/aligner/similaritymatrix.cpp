@@ -5,7 +5,7 @@
 #include <algorithm> 
 #include <Eigen/Dense>
 
-Similarity_Matrix::Similarity_Matrix(const std::string& sequence_x, const std::string& sequence_y) :
+Similarity_Matrix::Similarity_Matrix(std::string_view sequence_x, std::string_view sequence_y) :
     similarity_matrix(sequence_x.size() + 1, sequence_y.size() + 1) 
 {
     similarity_matrix.setZero();
@@ -25,7 +25,8 @@ void Similarity_Matrix::print_matrix() const {
     std::cout << similarity_matrix << std::endl;
 }
 
-void Similarity_Matrix::iterate_anti_diagonal(std::function<double(const Eigen::MatrixXd&, index_tuple)> callback) {
+void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(const Eigen::MatrixXd &,
+                                                                         index_tuple)> &callback) {
     const unsigned int dim_x = similarity_matrix.rows();
     const unsigned int dim_y = similarity_matrix.cols();
 

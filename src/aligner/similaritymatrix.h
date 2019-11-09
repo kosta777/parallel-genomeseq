@@ -16,7 +16,7 @@ class Similarity_Matrix {
          * @param sequence_x Sequence along the x-axis of the matrix.
          * @param sequence_y Sequence along the y-axis.
          */
-        Similarity_Matrix(const std::string& sequence_x, const std::string& sequence_y);
+        Similarity_Matrix(std::string_view sequence_x, std::string_view sequence_y);
 
         /**
          * Iterates through all matrix entries in a fashion that respects data dependencies of the Smith-Waterman algrithm.
@@ -24,7 +24,7 @@ class Similarity_Matrix {
          * 
          * @param callback A callback function that is called for each matrix entry (with a reference to the matrix itself as a first argument).
          */
-        void iterate_anti_diagonal(std::function<double(const Eigen::MatrixXd&, index_tuple)> callback);
+        void iterate_anti_diagonal(const std::function<double(const Eigen::MatrixXd &, index_tuple)> &callback);
         
         index_tuple find_index_of_maximum() const; 
         void print_matrix() const;

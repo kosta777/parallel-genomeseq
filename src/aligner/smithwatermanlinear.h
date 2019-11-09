@@ -12,8 +12,7 @@ typedef std::pair<Eigen::Index, Eigen::Index> index_tuple;
 
 class SWAligner : public LocalAligner {
     public:
-        SWAligner();
-        SWAligner(const std::string&, const std::string&);
+    SWAligner(std::string_view, std::string_view);
 
         /*
          * Maximum score in similarity matrix.
@@ -37,7 +36,6 @@ class SWAligner : public LocalAligner {
 
         void traceback(index_tuple, unsigned int&);
         void calculate_similarity_matrix();
-        double on_each_iteration(const Eigen::MatrixXd&, index_tuple);
 };
 
 #endif

@@ -7,6 +7,7 @@ class LocalAligner {
   public:
     virtual double calculateScore() = 0;
     virtual unsigned int getPos() const = 0;
+
 };
 
 #endif

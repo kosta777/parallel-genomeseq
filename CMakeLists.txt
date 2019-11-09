@@ -27,8 +27,9 @@ if (USEMPI)
   find_package(MPI REQUIRED)
   message(STATUS "Using MPI_INCLUDE_PATH: ${MPI_INCLUDE_PATH}")
   message(STATUS "Using MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
+  message(STATUS "Using MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
   include_directories(SYSTEM ${MPI_INCLUDE_PATH})
-  set(CMAKE_CXX_COMPILER ${CXX}) #use C-API exposed to C++ https://cmake.org/cmake/help/latest/module/FindMPI.html
+  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
 endif ()
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)

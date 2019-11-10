@@ -37,6 +37,13 @@ cmake .. -DUSEMPI=ON
 ## API
 Please go to test file to find usage.
 ```C++
+//Constructor
+class SWAligner : public LocalAligner {
+  public:
+    SWAligner(std::string_view, std::string_view);
+    SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
+}
+//API
 class LocalAligner {
   public:
     virtual double calculateScore() = 0;
@@ -63,7 +70,8 @@ cd ../py
 python reader.py gen_input
 cd ..
 ./bin/sw_solve_small
-python py/eval.py sw_solve_small
+cd py
+python eval.py sw_solve_small
 #test
 cd build
 cmake ..

@@ -13,6 +13,7 @@ include("cmake/GetEigen.cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(TARGET_NAME parseqal)
 option(DEBUG "debug mode" OFF)
+option(VERBOSE "verbose output" OFF)
 option(USEMPI "Use MPI" OFF)
 set(CMAKE_BUILD_TYPE "Release")
 
@@ -21,6 +22,11 @@ if (DEBUG)
   set(TARGET_NAME parseqal_debug)
   add_definitions(-DDEBUG)
 endif ()
+
+if (VERBOSE)
+  add_definitions(-DVERBOSE)
+endif ()
+
 
 if (USEMPI)
   add_definitions(-DUSEMPI)

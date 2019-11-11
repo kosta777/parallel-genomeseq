@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -25,7 +26,7 @@ int main() {
   }
   fa.close();
 
-#ifdef DEBUG
+#ifdef VERBOSE
   std::cout << "fa stuff: " << std::endl;
     std::cout << fa_string << std::endl;
     std::cout << fa_string.size() << std::endl;
@@ -66,13 +67,15 @@ int main() {
       output_header_line += ",score";
       align_output << output_header_line << "\n";
     } else {
-#ifdef DEBUG
+#ifdef VERBOSE
       std::cout << "about to call SWAligner" << std::endl;
-        std::cout << row[2] << std::endl;
+      std::cout << row[2] << std::endl;
 #endif
-      LocalAligner *la = new SWAligner(row[2],fa_string);
-      score_tmp = la->calculateScore();
-      pos_pred_tmp = la->getPos();
+      {
+        auto la = std::make_unique<SWAligner>(row[2],fa_string);
+        score_tmp = la->calculateScore();
+        pos_pred_tmp = la->getPos();
+      }
       align_output << input_line << ", "
                    << pos_pred_tmp << ", "
                    << score_tmp << "\n";

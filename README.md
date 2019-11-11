@@ -24,7 +24,7 @@ make
 
 ```bash
 cd build
-cmake .. -DDEBUG=ON
+cmake .. -DDEBUG=ON #-DVERBOSE=ON #if need verbose output
 ```
 
 ### Building MPI version:
@@ -37,6 +37,13 @@ cmake .. -DUSEMPI=ON
 ## API
 Please go to test file to find usage.
 ```C++
+//Usage
+#include <memory>
+{
+  auto la = std::make_unique<SWAligner>(str1,str2);
+  la->calculateScore();
+  \\... = la->get...();
+}
 //Constructor
 class SWAligner : public LocalAligner {
   public:

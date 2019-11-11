@@ -11,7 +11,7 @@ Similarity_Matrix::Similarity_Matrix(std::string_view sequence_x, std::string_vi
 index_tuple Similarity_Matrix::find_index_of_maximum() const {
   Eigen::Index x = 0, y = 0;
   similarity_matrix.maxCoeff(&x, &y);
-#ifdef DEBUG
+#ifdef VERBOSE
   std::cout << "Maximum is " << similarity_matrix(x, y) << " @ (" << x << ", " << y << ")" << std::endl;
 #endif
   index_tuple max(x, y);

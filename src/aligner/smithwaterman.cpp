@@ -87,7 +87,7 @@ double SWAligner::calculateScore() {
   sequence_y.insert(max_idx.second, ")");
 
   traceback(max_idx, pos);
-#ifdef DEBUG
+#ifdef VERBOSE
   similarity_matrix.print_matrix();
   std::cout << "POS: " << pos << std::endl;
 

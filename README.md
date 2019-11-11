@@ -10,7 +10,11 @@ These three closely related algorithms all fall under the category of dynamic pr
 
 ## Installation
 
-The project is built with CMake.
+The project is built with CMake. Available options:
+1. `-DDEBUG=ON` to compile in debug mode
+2. `-DVERBOSE=ON` to turn on verbose output
+3. `-DUSEMPI=ON` to use MPI (requires openMPI library installed)
+4. `-DUSEOMP=ON` to use OpenMP (requires openMP library installed)
 
 ### Building a release version:
 
@@ -32,10 +36,14 @@ cmake .. -DDEBUG=ON #-DVERBOSE=ON #if need verbose output
 ```bash
 cd build
 cmake .. -DUSEMPI=ON
+make
+cd ../bin
+mpiexec parseq
 ```
 
-## API
-Please go to test file to find usage.
+## Development
+Please wrap anything using MPI by `#ifdef USEMPI ... #endif` and anything using OpenMP by `#ifdef USEOMP ... #endif`.
+The rule of thumb is do not break serial code when MPI and openMP is not available.
 ```C++
 //Usage
 #include <memory>

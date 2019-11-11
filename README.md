@@ -27,6 +27,34 @@ cd build
 cmake .. -DDEBUG=ON
 ```
 
+### Building MPI version:
+
+```bash
+cd build
+cmake .. -DUSEMPI=ON
+```
+
+## API
+Please go to test file to find usage.
+```C++
+//Constructor
+class SWAligner : public LocalAligner {
+  public:
+    SWAligner(std::string_view, std::string_view);
+    SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
+}
+//API
+class LocalAligner {
+  public:
+    virtual double calculateScore() = 0;
+    virtual double getScore() const = 0;
+    virtual unsigned int getPos() const = 0;
+    virtual std::string_view getConsensus_x() const = 0;
+    virtual std::string_view getConsensus_y() const = 0;
+    virtual const Similarity_Matrix& getSimilarity_matrix() const =0;
+};
+```
+
 ## Usage
 
 Run the binary `parsequal` in the `bin` directory.
@@ -34,7 +62,19 @@ Run the binary `parsequal` in the `bin` directory.
 -Generate a modified input file with fields: index, QNAME, SEQ, POS (POS="true" alignment positions extracted from a SAM file), solve the small dataset using Smith-Waterman, and evaluate the alignment result wrt "true" positions using a py script:
 
 ```bash
+#sw_solve_small
+cd build
+cmake ..
+make sw_solve_small
+cd ../py
 python reader.py gen_input
-parseqal sw_solve_small
+cd ..
+./bin/sw_solve_small
+cd py
 python eval.py sw_solve_small
+#test
+cd build
+cmake ..
+make test
+../bin/tests
 ```

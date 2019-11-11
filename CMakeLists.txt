@@ -5,16 +5,16 @@ include("cmake/clang_tidy.cmake")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CC_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -pedantic -Wextra -g -ggdb ")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Og -Wall -pedantic -Wextra -g -ggdb --std=c++17")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17 -flto")
 
 project(GENOMESEQ)
 include("cmake/GetEigen.cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(TARGET_NAME parseqal)
 option(DEBUG "debug mode" OFF)
+option(USEMPI "Use MPI" OFF)
 set(CMAKE_BUILD_TYPE "Release")
-include("cmake/GetEigen.cmake")
 
 if (DEBUG)
   set(CMAKE_BUILD_TYPE "Debug")
@@ -22,47 +22,46 @@ if (DEBUG)
   add_definitions(-DDEBUG)
 endif ()
 
+if (USEMPI)
+  add_definitions(-DUSEMPI)
+  find_package(MPI REQUIRED)
+  message(STATUS "Using MPI_INCLUDE_PATH: ${MPI_INCLUDE_PATH}")
+  message(STATUS "Using MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
+  message(STATUS "Using MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
+  include_directories(SYSTEM ${MPI_INCLUDE_PATH})
+  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+endif ()
+
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)
 add_library(libaligner ${ALIGNER_SRCS})
 target_link_libraries(libaligner PUBLIC Eigen)
 include_directories(${PROJECT_SOURCE_DIR}/src/aligner)
 
-# googletest
-configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-if(result)
-  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-if(result)
-  message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif()
-
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
-                 EXCLUDE_FROM_ALL)
-if (CMAKE_VERSION VERSION_LESS 2.8.11)
-  include_directories("${gtest_SOURCE_DIR}/include")
-endif()
-
 add_executable(${TARGET_NAME} src/main.cpp)
 target_link_libraries(${TARGET_NAME} PUBLIC Eigen)
 target_link_libraries(${TARGET_NAME} PRIVATE libaligner)
 target_link_libraries(${TARGET_NAME} PRIVATE warning_flags)
-target_link_libraries(${TARGET_NAME} PRIVATE gtest_main)
 #target_compile_definitions(${TARGET_NAME} PUBLIC -D_USE_MATH_DEFINES)
 
 add_executable(bwt_fm src/bwt_fm.cpp)
 target_link_libraries(bwt_fm PUBLIC Eigen)
 target_link_libraries(bwt_fm PRIVATE libaligner)
 
+add_executable(sw_solve_small src/sw_solve_small.cpp)
+target_link_libraries(sw_solve_small PRIVATE libaligner)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+include(cmake/GetGTest.cmake)
+aux_source_directory(${PROJECT_SOURCE_DIR}/test TEST_SRCS)
+add_executable(tests ${TEST_SRCS})
+target_link_libraries(tests libaligner)
+target_link_libraries(tests GTest)
+
+if (USEMPI)
+  target_link_libraries(${TARGET_NAME} PUBLIC ${MPI_CXX_LIBRARIES})
+  target_link_libraries(tests ${MPI_CXX_LIBRARIES})
+endif ()
 
 if(CLANG_TIDY_EXE)
   set_target_properties(${TARGET_NAME} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")

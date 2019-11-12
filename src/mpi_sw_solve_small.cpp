@@ -62,6 +62,7 @@ int main(int argc, char* argv[])
         
         MPI_Error_string(err,err_buffer,&resultlen);
         fprintf(stderr,err_buffer);
+        free(buff);
         MPI_File_close(&fh);
         MPI_Finalize();
         return 0;
@@ -186,6 +187,7 @@ int main(int argc, char* argv[])
            
     MPI_Barrier(comm);
     MPI_File_close(&fh);
+    free(buff);
   
     MPI_Finalize();
 

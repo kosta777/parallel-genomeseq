@@ -59,12 +59,9 @@ void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
 
 void SWAligner::calculate_similarity_matrix() {
   auto cb = [&sequence_x = sequence_x, &sequence_y = sequence_y, &
-      scoring_function = scoring_function](const Eigen::MatrixXd &matrix, index_tuple idx) {
+      scoring_function = scoring_function](double west, double north, double north_west, index_tuple idx) {
     auto a = sequence_x[idx.first - 1];
     auto b = sequence_y[idx.second - 1];
-    auto west = matrix(idx.first, idx.second - 1);
-    auto north = matrix(idx.first - 1, idx.second);
-    auto north_west = matrix(idx.first - 1, idx.second - 1);
     auto gap_penalty = 2;
     Eigen::Vector4d v{
         north_west + scoring_function(a, b),

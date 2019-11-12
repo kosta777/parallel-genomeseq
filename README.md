@@ -90,6 +90,6 @@ python eval.py sw_solve_small
 #test
 cd build
 cmake ..
-make test
+make
 ../bin/tests
 ```

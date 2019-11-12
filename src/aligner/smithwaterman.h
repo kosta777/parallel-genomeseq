@@ -36,7 +36,6 @@ class SWAligner : public LocalAligner {
     std::string sequence_y;
     Similarity_Matrix similarity_matrix;
     void traceback(index_tuple, unsigned int &);
-    void calculate_similarity_matrix();
     std::function<double(const char &, const char &)> scoring_function;
 };
 

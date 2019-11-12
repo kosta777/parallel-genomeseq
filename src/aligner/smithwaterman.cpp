@@ -57,26 +57,9 @@ void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
   }
 }
 
-void SWAligner::calculate_similarity_matrix() {
-  auto cb = [&sequence_x = sequence_x, &sequence_y = sequence_y, &
-      scoring_function = scoring_function](double west, double north, double north_west, index_tuple idx) {
-    auto a = sequence_x[idx.first - 1];
-    auto b = sequence_y[idx.second - 1];
-    auto gap_penalty = 2;
-    Eigen::Vector4d v{
-        north_west + scoring_function(a, b),
-        west - gap_penalty,
-        north - gap_penalty,
-        0
-    };
-    auto result = v.maxCoeff();
-    return result;
-  };
-  similarity_matrix.iterate_anti_diagonal(cb);
-}
-
 double SWAligner::calculateScore() {
-  calculate_similarity_matrix();
+  auto gap_penalty = 2;
+  similarity_matrix.iterate_anti_diagonal(scoring_function, gap_penalty);
 
   index_tuple max_idx = similarity_matrix.find_index_of_maximum();
 

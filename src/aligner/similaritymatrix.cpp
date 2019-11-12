@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 
 Similarity_Matrix::Similarity_Matrix(std::string_view sequence_x, std::string_view sequence_y) :
-    similarity_matrix(sequence_x.size() + 1, sequence_y.size() + 1) {
+    similarity_matrix(sequence_x.size() + 1, sequence_y.size() + 1), sequence_x(sequence_x), sequence_y(sequence_y) {
   similarity_matrix.setZero();
 }
 
@@ -22,8 +22,8 @@ void Similarity_Matrix::print_matrix() const {
   std::cout << similarity_matrix << std::endl;
 }
 
-void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(double, double, double,
-                                                                         index_tuple)> &callback) {
+void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(const char &, const char &)> &scoring_function,
+                                              double gap_penalty) {
   const unsigned int dim_x = similarity_matrix.rows();
   const unsigned int dim_y = similarity_matrix.cols();
 
@@ -44,7 +44,15 @@ void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(double,
       auto west = similarity_matrix(idx.first, idx.second - 1);
       auto north = similarity_matrix(idx.first - 1, idx.second);
       auto north_west = similarity_matrix(idx.first - 1, idx.second - 1);
-      similarity_matrix(local_i, k) = callback(west, north, north_west, idx);
+      auto a = sequence_x[idx.first - 1];
+      auto b = sequence_y[idx.second - 1];
+      Eigen::Vector4d v{
+          north_west + scoring_function(a, b),
+          west - gap_penalty,
+          north - gap_penalty,
+          0
+      };
+      similarity_matrix(local_i, k) = v.maxCoeff();
       --local_i;
     }
   }
@@ -54,7 +62,8 @@ const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {
   return similarity_matrix;
 }
 
-Similarity_Matrix_Skewed::Similarity_Matrix_Skewed(std::string_view sequence_x, std::string_view sequence_y) {
+Similarity_Matrix_Skewed::Similarity_Matrix_Skewed(std::string_view sequence_x, std::string_view sequence_y)
+    : sequence_x(sequence_x), sequence_y(sequence_y) {
   len_x = sequence_x.size() + 1;
   len_y = sequence_y.size() + 1;
   raw_matrix = Eigen::MatrixXd(std::min(len_x,len_y), std::max(len_x,len_y)); 
@@ -73,8 +82,8 @@ index_tuple Similarity_Matrix_Skewed::find_index_of_maximum() const {
 
 void Similarity_Matrix_Skewed::print_matrix() const {
   Eigen::MatrixXd similarity_matrix(len_x,len_y);
-  for (int j; j < len_y; j++) {
-    for (int i; i < len_x; i++) {
+  for (int j = 0; j < len_y; j++) {
+    for (int i = 0; i < len_x; i++) {
       index_tuple trueidx(i,j);
       auto [ri, rj] = trueindex2rawindex(trueidx);
       similarity_matrix(i,j) = raw_matrix(ri,rj);

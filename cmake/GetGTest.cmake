@@ -3,7 +3,7 @@ find_package(Threads REQUIRED)
 include(ExternalProject)
 ExternalProject_Add(
   GTestProject
-  URL https://github.com/google/googletest/archive/release-1.8.1.zip
+  URL ${PROJECT_SOURCE_DIR}/cmake/googletest-release-1.8.1.zip
   SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/gtest_source
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/gtest_binary
   CMAKE_ARGS "-Dgtest_force_shared_crt=ON"

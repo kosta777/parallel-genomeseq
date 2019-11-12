@@ -8,9 +8,7 @@
 namespace {
   class SWAligner_Test : public testing::Test {
     protected:
-    
       void SetUp() override {
-
         // Wikipedia Waterman-Smith example
         // https://en.wikipedia.org/wiki/Smith%E2%80%93Waterman_algorithm#/media/File:Smith-Waterman-Algorithm-Example-Step2.png
         std::string sequence_x = "GGTTGACTA";

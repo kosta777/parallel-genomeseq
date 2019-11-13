@@ -21,6 +21,7 @@ void Similarity_Matrix::print_matrix() const {
   std::cout << similarity_matrix << std::endl;
 }
 
+#pragma omp declare simd uniform(gap_penalty)
 double dp_func(double north, double west, double north_west, double score, double gap_penalty) {
   Eigen::Vector4d v{
     north_west + score,
@@ -95,6 +96,7 @@ void Similarity_Matrix_Skewed::print_matrix() const {
   std::cout << similarity_matrix << std::endl;
 }
 
+#pragma omp declare simd uniform(nrows, ncols, len_x, len_y)
 index_tuple _rawindex2trueindex(size_t ri, size_t rj, size_t nrows, size_t ncols, size_t len_x, size_t len_y) {
  if (rj < nrows - 1) {
     if (ri <= rj) {//upper triangular part
@@ -118,6 +120,7 @@ index_tuple Similarity_Matrix_Skewed::rawindex2trueindex(index_tuple raw_index) 
   return _rawindex2trueindex(ri, rj, nrows, ncols, len_x, len_y);
 }
 
+#pragma omp declare simd uniform(nrows, ncols, len_x, len_y)
 index_tuple _trueindex2rawindex(size_t ti, size_t tj, size_t nrows, size_t ncols, size_t len_x, size_t len_y) {
   if (ti + tj < nrows - 1) {//upper triangular part
     return index_tuple(ti ,ti + tj);
@@ -143,8 +146,10 @@ void Similarity_Matrix_Skewed::iterate_anti_diagonal(const std::function<double(
   auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;
   //Phase 1: Upper triangular part
-  for (int j = 2; j < nrows; j++) {
-    for (int i = 1; i < j; i++) {
+  for (Eigen::Index j = 2; j < nrows; j++) {
+    //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, gap_penalty, scoring_function)
+    #pragma omp simd
+    for (Eigen::Index i = 1; i < j; i++) {
       auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
       auto a = sequence_x[ti - 1];
       auto b = sequence_y[tj - 1];
@@ -152,9 +157,11 @@ void Similarity_Matrix_Skewed::iterate_anti_diagonal(const std::function<double(
     }
   }
   //Phase 2: Equal-length diagonal part
-  for (int j = nrows; j < ncols; j++) {
+  for (Eigen::Index j = nrows; j < ncols; j++) {
     if (flag) {//Condition 1: diagonal propagate horizontaly (+y)
-      for (int i = 1; i < nrows; i++) {
+      //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, gap_penalty, scoring_function)
+      #pragma omp simd
+      for (Eigen::Index i = 1; i < nrows; i++) {
         auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
         auto a = sequence_x[ti - 1];
         auto b = sequence_y[tj - 1];
@@ -162,7 +169,9 @@ void Similarity_Matrix_Skewed::iterate_anti_diagonal(const std::function<double(
       }
     } else {//Condition 2: diagonal propagate vertically (+x)
       auto di_nw = j == nrows ? 0 : 1;
-      for (int i = 0; i < nrows - 1; i++) {
+      //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, di_nw, gap_penalty, scoring_function)
+      #pragma omp simd
+      for (Eigen::Index i = 0; i < nrows - 1; i++) {
         auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
         auto a = sequence_x[ti - 1];
         auto b = sequence_y[tj - 1];
@@ -171,11 +180,13 @@ void Similarity_Matrix_Skewed::iterate_anti_diagonal(const std::function<double(
     }
   }
   //Phase 3: Lower triangular part
-  for (int j = 0; j < nrows - 1; j++) {
+  for (Eigen::Index j = 0; j < nrows - 1; j++) {
     auto j_prev = j == 0 ? ncols - 1 : j - 1;
     auto j_prev2 = j <= 1 ? ncols - 2 + j : j - 2;
     auto di_nw = (j == 0) && (!flag) ? 1 : 0;
-    for (int i = j + 1; i < nrows; i++) {
+    //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, j_prev, j_prev2, di_nw, gap_penalty, scoring_function)
+    #pragma omp simd
+    for (Eigen::Index i = j + 1; i < nrows; i++) {
       auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
       auto a = sequence_x[ti - 1];
       auto b = sequence_y[tj - 1];

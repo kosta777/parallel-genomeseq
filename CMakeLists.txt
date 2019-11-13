@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CC_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Og -Wall -pedantic -Wextra -g -ggdb --std=c++17")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17 -flto")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17 -flto") #-fopt-info
 
 project(GENOMESEQ)
 include("cmake/GetEigen.cmake")
@@ -42,7 +42,7 @@ endif ()
 if (USEOMP)
   add_definitions(-DUSEOMP)
   find_package(OpenMP)
-  message(STATUS "Using OMP Version: ${OpenMP_VERSION}")
+  message(STATUS "Using OMP Version: ${OpenMP_CXX_VERSION}")
   include_directories(SYSTEM ${OpenMP_CXX_INCLUDE_DIRS})
 endif()
 
@@ -79,6 +79,8 @@ endif ()
 
 if (USEOMP)
   target_link_libraries(${TARGET_NAME} PUBLIC OpenMP::OpenMP_CXX)
+  target_link_libraries(libaligner PUBLIC OpenMP::OpenMP_CXX)
+  target_link_libraries(sw_solve_small PUBLIC OpenMP::OpenMP_CXX)
   target_link_libraries(tests PUBLIC OpenMP::OpenMP_CXX)
 endif ()
 

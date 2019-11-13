@@ -48,7 +48,7 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
   public:
     Similarity_Matrix_Skewed(std::string_view sequence_x, std::string_view sequence_y);
     void iterate_anti_diagonal(const std::function<double(const char &, const char &)> &scoring_function,
-                               double gap_penalty) override {};
+                               double gap_penalty) override;
     index_tuple find_index_of_maximum() const override;
     void print_matrix() const override;
     const Eigen::MatrixXd &get_matrix() const override { return raw_matrix; };

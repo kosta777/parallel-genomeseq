@@ -61,7 +61,7 @@ void SWAligner<SMT>::traceback(index_tuple idx, unsigned int &preliminary_pos) {
 template <class SMT>
 double SWAligner<SMT>::calculateScore() {
   auto gap_penalty = 2;
-  similarity_matrix.iterate_anti_diagonal(scoring_function, gap_penalty);
+  similarity_matrix.iterate(scoring_function, gap_penalty);
 
   auto [index_x, index_y, max] = similarity_matrix.find_index_of_maximum();
   max_score = max;
@@ -71,7 +71,7 @@ double SWAligner<SMT>::calculateScore() {
 
   traceback(index_tuple(index_x, index_y), pos);
 #ifdef VERBOSE
-  similarity_matrix.print_matrix();
+  raw_matrix.print_matrix();
   std::cout << "POS: " << pos << std::endl;
 
   std::cout << sequence_x << std::endl;

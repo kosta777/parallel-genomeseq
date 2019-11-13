@@ -10,12 +10,9 @@ class Abstract_Similarity_Matrix{
   public:
     /**
      * Iterates through all matrix entries in a fashion that respects data dependencies of the Smith-Waterman algrithm.
-     * Starts in the north-west corner and moves along anti-diagonals to the south-east corner of the matrix.
-     *
-     * @param callback A callback function that is called for each matrix entry (with a reference to the matrix itself as a first argument).
      */
-    virtual void iterate_anti_diagonal(const std::function<double(const char &, const char &)> &scoring_function,
-                                       double gap_penalty) = 0;
+    virtual void iterate(const std::function<double(const char &, const char &)> &scoring_function,
+                         double gap_penalty) = 0;
     virtual std::tuple<Eigen::Index, Eigen::Index, double> find_index_of_maximum() const = 0;
     virtual void print_matrix() const = 0;
     virtual const Eigen::MatrixXd &get_matrix() const = 0;
@@ -34,14 +31,16 @@ class Similarity_Matrix : public Abstract_Similarity_Matrix{
      * @param sequence_y Sequence along the y-axis.
      */
     Similarity_Matrix(std::string_view sequence_x, std::string_view sequence_y);
-    void iterate_anti_diagonal(const std::function<double(const char &, const char &)> &scoring_function,
-                               double gap_penalty) override;
+    void iterate(const std::function<double(const char &, const char &)> &scoring_function,
+                 double gap_penalty) override;
+    void iterate_column(const std::function<double(const char &, const char &)> &scoring_function,
+                        double gap_penalty);
     std::tuple<Eigen::Index, Eigen::Index, double> find_index_of_maximum() const override;
     void print_matrix() const override;
     const Eigen::MatrixXd &get_matrix() const override;
-    double operator()(Eigen::Index row, Eigen::Index col) const override { return similarity_matrix(row,col); };
+    double operator()(Eigen::Index row, Eigen::Index col) const override { return raw_matrix(row, col); };
   private:
-    Eigen::MatrixXd similarity_matrix; // column major
+    Eigen::MatrixXd raw_matrix; // column major
     std::string_view sequence_x;
     std::string_view sequence_y;
 };
@@ -49,8 +48,8 @@ class Similarity_Matrix : public Abstract_Similarity_Matrix{
 class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
   public:
     Similarity_Matrix_Skewed(std::string_view sequence_x, std::string_view sequence_y);
-    void iterate_anti_diagonal(const std::function<double(const char &, const char &)> &scoring_function,
-                               double gap_penalty) override;
+    void iterate(const std::function<double(const char &, const char &)> &scoring_function,
+                 double gap_penalty) override;
     std::tuple<Eigen::Index, Eigen::Index, double> find_index_of_maximum() const override;
     void print_matrix() const override;
     const Eigen::MatrixXd &get_matrix() const override { return raw_matrix; };

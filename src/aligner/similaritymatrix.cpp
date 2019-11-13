@@ -4,21 +4,21 @@
 #include <Eigen/Dense>
 
 Similarity_Matrix::Similarity_Matrix(std::string_view sequence_x, std::string_view sequence_y) :
-    similarity_matrix(sequence_x.size() + 1, sequence_y.size() + 1), sequence_x(sequence_x), sequence_y(sequence_y) {
-  similarity_matrix.setZero();
+    raw_matrix(sequence_x.size() + 1, sequence_y.size() + 1), sequence_x(sequence_x), sequence_y(sequence_y) {
+  raw_matrix.setZero();
 }
 
 std::tuple<Eigen::Index, Eigen::Index, double> Similarity_Matrix::find_index_of_maximum() const {
   Eigen::Index x = 0, y = 0;
-  auto max = similarity_matrix.maxCoeff(&x, &y);
+  auto max = raw_matrix.maxCoeff(&x, &y);
 #ifdef VERBOSE
-  std::cout << "Maximum is " << similarity_matrix(x, y) << " @ (" << x << ", " << y << ")" << std::endl;
+  std::cout << "Maximum is " << max << " @ (" << x << ", " << y << ")" << std::endl;
 #endif
   return {x, y, max};
 }
 
 void Similarity_Matrix::print_matrix() const {
-  std::cout << similarity_matrix << std::endl;
+  std::cout << raw_matrix << std::endl;
 }
 
 #pragma omp declare simd uniform(gap_penalty)
@@ -32,7 +32,23 @@ double dp_func(double north, double west, double north_west, double score, doubl
   return v.maxCoeff();
 }
 
-void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(const char &, const char &)> &scoring_function,
+void Similarity_Matrix::iterate_column(const std::function<double(const char &, const char &)> &scoring_function,
+                                double gap_penalty) {
+  auto nrows = raw_matrix.rows();
+  auto ncols = raw_matrix.cols();
+  for (Eigen::Index j = 1; j < ncols; j++) {
+    for (Eigen::Index i = 1; i < nrows; i++) {
+      auto west = raw_matrix(i, j - 1);
+      auto north = raw_matrix(i - 1, j);
+      auto north_west = raw_matrix(i - 1, j - 1);
+      auto a = sequence_x[i - 1];
+      auto b = sequence_y[j - 1];
+      raw_matrix(i, j) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+    }
+  }
+}
+
+void Similarity_Matrix::iterate(const std::function<double(const char &, const char &)> &scoring_function,
                                               double gap_penalty) {
   const unsigned int dim_x = similarity_matrix.rows();
   const unsigned int dim_y = similarity_matrix.cols();
@@ -63,7 +79,7 @@ void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(const c
 }
 
 const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {
-  return similarity_matrix;
+  return raw_matrix;
 }
 
 Similarity_Matrix_Skewed::Similarity_Matrix_Skewed(std::string_view sequence_x, std::string_view sequence_y)
@@ -140,8 +156,8 @@ index_tuple Similarity_Matrix_Skewed::trueindex2rawindex(index_tuple true_index)
 }
 
 
-void Similarity_Matrix_Skewed::iterate_anti_diagonal(const std::function<double(const char &, const char &)> &scoring_function,
-                                                     double gap_penalty) {
+void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, const char &)> &scoring_function,
+                                       double gap_penalty) {
   auto nrows = raw_matrix.rows();
   auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;

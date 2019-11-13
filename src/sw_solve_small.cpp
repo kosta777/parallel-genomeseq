@@ -73,7 +73,7 @@ int main() {
       std::cout << row[2] << std::endl;
 #endif
       {
-        auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2],fa_string);
+        auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2],fa_string);
         score_tmp = la->calculateScore();
         pos_pred_tmp = la->getPos();
       }

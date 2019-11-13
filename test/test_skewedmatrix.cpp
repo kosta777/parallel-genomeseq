@@ -46,10 +46,10 @@ TEST(SimilarityMatrix, SkewedMatrixDP) {
   auto skewed2 = Similarity_Matrix_Skewed(sequence_y, sequence_x);
   auto normal2 = Similarity_Matrix(sequence_y, sequence_x);
   auto scoring_function = [] (const char& a, const char& b) {return a == b ? 3.0 : -3.0;};
-  skewed.iterate_anti_diagonal(scoring_function, 2.0);
-  normal.iterate_anti_diagonal(scoring_function, 2.0);
-  skewed2.iterate_anti_diagonal(scoring_function, 2.0);
-  normal2.iterate_anti_diagonal(scoring_function, 2.0);
+  skewed.iterate(scoring_function, 2.0);
+  normal.iterate(scoring_function, 2.0);
+  skewed2.iterate(scoring_function, 2.0);
+  normal2.iterate(scoring_function, 2.0);
   auto skewed_mat = skewed.get_matrix();
   auto normal_mat = normal.get_matrix();
   auto skewed2_mat = skewed2.get_matrix();

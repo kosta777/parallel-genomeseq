@@ -59,7 +59,7 @@ void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(const E
     Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
     Eigen::Index ad_idx;
     omp_set_num_threads(sm_OMP_nthreads);
-    #pragma omp parallel for shared(ad_len) private(ad_idx,idx)
+    #pragma omp parallel for shared(ad_len) private(ad_idx)
     for (ad_idx=0; ad_idx<ad_len; ++ad_idx) {
       index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
       similarity_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = callback(similarity_matrix, idx);

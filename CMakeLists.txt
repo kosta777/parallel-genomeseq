@@ -49,6 +49,7 @@ endif()
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)
 add_library(libaligner ${ALIGNER_SRCS})
 target_link_libraries(libaligner PUBLIC Eigen)
+target_link_libraries(libaligner PUBLIC OpenMP::OpenMP_CXX)
 include_directories(${PROJECT_SOURCE_DIR}/src/aligner)
 
 add_executable(${TARGET_NAME} src/main.cpp)

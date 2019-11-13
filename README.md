@@ -48,17 +48,19 @@ The rule of thumb is do not break serial code when MPI and openMP is not availab
 //Usage
 #include <memory>
 {
-  auto la = std::make_unique<SWAligner>(str1,str2);
+  auto la = std::make_unique<SWAligner<Similarity_Matrix>>(str1,str2); //or SWAligner<Similarity_Matrix_Skewed>
   la->calculateScore();
-  \\... = la->get...();
+  //... = la->get...();
 }
 //Constructor
-class SWAligner : public LocalAligner {
+template <class Similarity_Matrix_Type>
+class SWAligner : public LocalAligner <Similarity_Matrix_Type> {
   public:
     SWAligner(std::string_view, std::string_view);
     SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
 }
 //API
+template <class Similarity_Matrix_Type>
 class LocalAligner {
   public:
     virtual double calculateScore() = 0;
@@ -66,7 +68,7 @@ class LocalAligner {
     virtual unsigned int getPos() const = 0;
     virtual std::string_view getConsensus_x() const = 0;
     virtual std::string_view getConsensus_y() const = 0;
-    virtual const Similarity_Matrix& getSimilarity_matrix() const =0;
+    virtual const Similarity_Matrix_Type& getSimilarity_matrix() const =0;
 };
 ```
 

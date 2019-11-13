@@ -28,6 +28,10 @@ class SWAligner : public LocalAligner {
     std::string_view getConsensus_x() const override {return sequence_x;}
     std::string_view getConsensus_y() const override {return sequence_y;}
     const Similarity_Matrix& getSimilarity_matrix() const override { return similarity_matrix;}
+    double pub_max_score;
+    int sw_OMP_nthreads;
+    int sw_OMP_nthreads2;
+    std::string sw_iter_method;
 
   private:
     unsigned int pos;
@@ -39,5 +43,4 @@ class SWAligner : public LocalAligner {
     void calculate_similarity_matrix();
     std::function<double(const char &, const char &)> scoring_function;
 };
-
 #endif

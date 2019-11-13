@@ -21,6 +21,7 @@ SWAligner::SWAligner(std::string_view first_sequence,
     similarity_matrix(first_sequence, second_sequence),
     scoring_function(std::move(scoring_function)) {}
 
+
 void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
   auto matrix = similarity_matrix.get_matrix();
 
@@ -79,7 +80,9 @@ void SWAligner::calculate_similarity_matrix() {
 }
 
 double SWAligner::calculateScore() {
+  sw_OMP_nthreads2 = sw_OMP_nthreads;
   calculate_similarity_matrix();
+  sw_iter_method = similarity_matrix.sm_iter_method;
 
   index_tuple max_idx = similarity_matrix.find_index_of_maximum();
 
@@ -95,5 +98,6 @@ double SWAligner::calculateScore() {
   std::cout << sequence_y << std::endl;
 #endif
   max_score = similarity_matrix.get_matrix()(max_idx.first, max_idx.second);
+  pub_max_score = max_score;
   return max_score;
 }

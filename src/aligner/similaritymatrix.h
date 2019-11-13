@@ -30,6 +30,8 @@ class Similarity_Matrix {
     index_tuple find_index_of_maximum() const;
     void print_matrix() const;
     const Eigen::MatrixXd &get_matrix() const;
+    std::string sm_iter_method;
+    int sm_OMP_nthreads;
 
   private:
     Eigen::MatrixXd similarity_matrix;

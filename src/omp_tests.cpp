@@ -66,6 +66,30 @@ int main(int argc, char** argv) {
     std::cout<<test_vec<<std::endl;
   }
 
+  else if (argv1.compare("eigen3")==0) {
+    std::cout<<"Hello omp eigen"<<std::endl;
+
+    Eigen::VectorXd test_vec = Eigen::VectorXd::LinSpaced(12,11,0);
+    std::cout<<test_vec<<std::endl;
+    std::cout<<test_vec.size()<<std::endl;
+
+#ifdef USEOMP
+    omp_set_num_threads(arg_nthreads);
+    int cur_thread_num;
+    int i;
+    int n = test_vec.size();
+    #pragma omp parallel for shared(n) private(i,cur_thread_num)
+    for(i=0; i<n; i++){
+      cur_thread_num = omp_get_thread_num();
+      printf("i: %d, 1 Thread no: %d, \n", cur_thread_num, i);
+      printf("i: %d, 2 Thread no: %d, \n", cur_thread_num, i);
+      test_vec(i) = cur_thread_num;
+      printf("i:%d, value assigned \n\n",i);
+    }
+#endif
+    std::cout<<test_vec<<std::endl;
+  }
+
 
   else if (argv1.compare("hello1")==0) {
     omp_set_num_threads(arg_nthreads);
@@ -113,7 +137,106 @@ int main(int argc, char** argv) {
 #endif
   }
 
-  else if (argv1.compare("solve")==0) {
+  else if (argv1.compare("solve_omp")==0) {
+    const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
+    const std::string input_file_path = "data/data_small_ground_truth.csv";
+    const std::string output_file_path = "data/align_output.csv";
+  
+    std::cout << "Hello sw_solve_small" << std::endl;
+  
+    std::ifstream fa;
+    fa.open(fa_file_path);
+    std::string fa_string;
+    std::string fa_line;
+    int i = 0;
+    while (std::getline(fa, fa_line)) {
+      if (i > 0) {
+        fa_string += fa_line;
+      }
+      i++;
+    }
+    fa.close();
+  
+  #ifdef VERBOSE
+    std::cout << "fa stuff: " << std::endl;
+      std::cout << fa_string << std::endl;
+      std::cout << fa_string.size() << std::endl;
+  #endif
+  
+    std::ifstream align_input;
+    align_input.open(input_file_path);
+    std::string input_line;
+    std::string delimiter = ",";
+  
+    std::ofstream align_output;
+    align_output.open(output_file_path);
+    std::string output_line;
+  
+    std::string input_header_line;
+    std::string output_header_line;
+  
+    double score_tmp;
+    int pos_pred_tmp;
+    i = 0;
+    while (std::getline(align_input, input_line)) {
+      if (i>1){
+        break;
+      }
+      std::vector<std::string> row;
+      std::string input_line_tmp = input_line;
+  
+      input_line_tmp += ",";
+      size_t pos = 0;
+      std::string token;
+      while ((pos = input_line_tmp.find(delimiter)) != std::string::npos) {
+        token = input_line_tmp.substr(0, pos);
+        input_line_tmp.erase(0, pos + delimiter.length());
+        row.push_back(token);
+      }
+  
+      if (i == 0) {
+        input_header_line = input_line;
+        output_header_line = input_line;
+        output_header_line += ",pos_pred";
+        output_header_line += ",score";
+        align_output << output_header_line << "\n";
+      } else {
+  #ifdef VERBOSE
+        std::cout << "about to call SWAligner" << std::endl;
+        std::cout << row[2] << std::endl;
+  #endif
+        {
+          auto la = std::make_unique<SWAligner>(row[2],fa_string);
+	  la->sw_OMP_nthreads = 4;
+	  std::cout<<la->sw_OMP_nthreads<<std::endl;
+          score_tmp = la->calculateScore();
+          pos_pred_tmp = la->getPos();
+
+	  std::cout<<la->sw_OMP_nthreads2<<std::endl;
+	  std::cout<<la->sw_iter_method<<std::endl;
+  #ifdef VERBOSE
+          std::cout << "OMP test stuff" << std::endl;
+          std::cout << la->pub_max_score << std::endl;
+  #endif
+        }
+        align_output << input_line << ", "
+                     << pos_pred_tmp << ", "
+                     << score_tmp << "\n";
+      }
+  
+      if (i % 50 == 0) {
+        std::cout << "progress: " << i << std::endl;
+      }
+  
+      i++;
+    }
+    align_input.close();
+    align_output.close();
+    std::cout << "Done, output file see: " << output_file_path << std::endl;
+  }
+
+
+  else if (argv1.compare("solve_original")==0) {
     const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
     const std::string input_file_path = "data/data_small_ground_truth.csv";
     const std::string output_file_path = "data/align_output.csv";

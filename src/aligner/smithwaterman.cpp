@@ -3,7 +3,8 @@
 #include <utility>
 #include "smithwaterman.h"
 
-SWAligner::SWAligner(std::string_view first_sequence, std::string_view second_sequence) :
+template <class SMT>
+SWAligner<SMT>::SWAligner(std::string_view first_sequence, std::string_view second_sequence) :
     pos(0),
     max_score(-1),
     sequence_x(first_sequence),
@@ -11,7 +12,8 @@ SWAligner::SWAligner(std::string_view first_sequence, std::string_view second_se
     similarity_matrix(first_sequence, second_sequence),
     scoring_function([](const char &a, const char &b) { return a == b ? 3.0 : -3.0; }) {}
 
-SWAligner::SWAligner(std::string_view first_sequence,
+template <class SMT>
+SWAligner<SMT>::SWAligner(std::string_view first_sequence,
                      std::string_view second_sequence,
                      std::function<double(const char &, const char &)> &&scoring_function) :
     pos(0),
@@ -21,12 +23,11 @@ SWAligner::SWAligner(std::string_view first_sequence,
     similarity_matrix(first_sequence, second_sequence),
     scoring_function(std::move(scoring_function)) {}
 
-void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
-  auto matrix = similarity_matrix.get_matrix();
-
+template <class SMT>
+void SWAligner<SMT>::traceback(index_tuple idx, unsigned int &preliminary_pos) {
   // stopping criterion
   auto [index_x, index_y] = idx;
-  if (matrix(index_x - 1, index_y - 1) == 0) {
+  if (similarity_matrix(index_x - 1, index_y - 1) == 0) {
     sequence_x.insert(index_x - 1, "(");
     sequence_y.insert(index_y - 1, "(");
 
@@ -34,9 +35,9 @@ void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
     return;
   }
 
-  auto n1 = matrix(index_x - 1, index_y - 1);
-  auto n2 = matrix(index_x, index_y - 1);
-  auto n3 = matrix(index_x - 1, index_y);
+  auto n1 = similarity_matrix(index_x - 1, index_y - 1);
+  auto n2 = similarity_matrix(index_x, index_y - 1);
+  auto n3 = similarity_matrix(index_x - 1, index_y);
 
   // move north-west
   if ((n1 >= n2) && (n1 >= n3)) {
@@ -57,16 +58,18 @@ void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
   }
 }
 
-double SWAligner::calculateScore() {
+template <class SMT>
+double SWAligner<SMT>::calculateScore() {
   auto gap_penalty = 2;
   similarity_matrix.iterate_anti_diagonal(scoring_function, gap_penalty);
 
-  index_tuple max_idx = similarity_matrix.find_index_of_maximum();
+  auto [index_x, index_y, max] = similarity_matrix.find_index_of_maximum();
+  max_score = max;
 
-  sequence_x.insert(max_idx.first, ")");
-  sequence_y.insert(max_idx.second, ")");
+  sequence_x.insert(index_x, ")");
+  sequence_y.insert(index_y, ")");
 
-  traceback(max_idx, pos);
+  traceback(index_tuple(index_x, index_y), pos);
 #ifdef VERBOSE
   similarity_matrix.print_matrix();
   std::cout << "POS: " << pos << std::endl;
@@ -74,6 +77,9 @@ double SWAligner::calculateScore() {
   std::cout << sequence_x << std::endl;
   std::cout << sequence_y << std::endl;
 #endif
-  max_score = similarity_matrix.get_matrix()(max_idx.first, max_idx.second);
-  return max_score;
+  return max;
 }
+
+//DO NOT FORGET TO INSTANTIATE the template class
+template class SWAligner<Similarity_Matrix>;
+template class SWAligner<Similarity_Matrix_Skewed>;

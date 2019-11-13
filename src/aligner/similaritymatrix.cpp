@@ -8,14 +8,13 @@ Similarity_Matrix::Similarity_Matrix(std::string_view sequence_x, std::string_vi
   similarity_matrix.setZero();
 }
 
-index_tuple Similarity_Matrix::find_index_of_maximum() const {
+std::tuple<Eigen::Index, Eigen::Index, double> Similarity_Matrix::find_index_of_maximum() const {
   Eigen::Index x = 0, y = 0;
-  similarity_matrix.maxCoeff(&x, &y);
+  auto max = similarity_matrix.maxCoeff(&x, &y);
 #ifdef VERBOSE
   std::cout << "Maximum is " << similarity_matrix(x, y) << " @ (" << x << ", " << y << ")" << std::endl;
 #endif
-  index_tuple max(x, y);
-  return max;
+  return {x, y, max};
 }
 
 void Similarity_Matrix::print_matrix() const {
@@ -74,14 +73,14 @@ Similarity_Matrix_Skewed::Similarity_Matrix_Skewed(std::string_view sequence_x, 
   raw_matrix.setZero();
 }
 
-index_tuple Similarity_Matrix_Skewed::find_index_of_maximum() const {
+std::tuple<Eigen::Index, Eigen::Index, double> Similarity_Matrix_Skewed::find_index_of_maximum() const {
   index_tuple maxidx(0,0);
   auto max = raw_matrix.maxCoeff(&maxidx.first, &maxidx.second);
-  maxidx = rawindex2trueindex(maxidx);
+  auto [x, y] = rawindex2trueindex(maxidx);
 #ifdef VERBOSE
   std::cout << "Maximum is " << max << " @( " << maxidx.first << "," << maxidx.second << ")" << std::endl;
 #endif
-  return maxidx;
+  return {x, y, max};
 }
 
 void Similarity_Matrix_Skewed::print_matrix() const {

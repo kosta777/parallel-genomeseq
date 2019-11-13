@@ -5,6 +5,7 @@
 #include <vector>
 #include "localaligner.h"
 #include "smithwaterman.h"
+#include "similaritymatrix.h"
 
 int main() {
   const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
@@ -45,7 +46,7 @@ int main() {
   std::string output_header_line;
 
   double score_tmp;
-  int pos_pred_tmp;
+  size_t pos_pred_tmp;
   i = 0;
   while (std::getline(align_input, input_line)) {
     std::vector<std::string> row;
@@ -72,7 +73,7 @@ int main() {
       std::cout << row[2] << std::endl;
 #endif
       {
-        auto la = std::make_unique<SWAligner>(row[2],fa_string);
+        auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2],fa_string);
         score_tmp = la->calculateScore();
         pos_pred_tmp = la->getPos();
       }

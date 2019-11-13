@@ -8,7 +8,8 @@
 
 typedef std::pair<Eigen::Index, Eigen::Index> index_tuple;
 
-class SWAligner : public LocalAligner {
+template <class Similarity_Matrix_Type>
+class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
   public:
     SWAligner(std::string_view, std::string_view);
     SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
@@ -27,14 +28,14 @@ class SWAligner : public LocalAligner {
     unsigned int getPos() const override {return pos;}
     std::string_view getConsensus_x() const override {return sequence_x;}
     std::string_view getConsensus_y() const override {return sequence_y;}
-    const Similarity_Matrix& getSimilarity_matrix() const override { return similarity_matrix;}
+    const Similarity_Matrix_Type& getSimilarity_matrix() const override { return similarity_matrix;}
 
   private:
     unsigned int pos;
     double max_score;
     std::string sequence_x;
     std::string sequence_y;
-    Similarity_Matrix similarity_matrix;
+    Similarity_Matrix_Type similarity_matrix;
     void traceback(index_tuple, unsigned int &);
     std::function<double(const char &, const char &)> scoring_function;
 };

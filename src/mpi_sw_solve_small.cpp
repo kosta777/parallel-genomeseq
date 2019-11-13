@@ -1,11 +1,14 @@
 #include <iostream>
 #include <fstream>
-#include <mpi.h>
 #include <string>
 #include <memory>
 
 #include "localaligner.h"
 #include "smithwaterman.h"
+
+#ifdef USEMPI
+#include <mpi.h>
+#endif
 
 const int read_size = 125;
 struct read_output{
@@ -119,26 +122,25 @@ int main(int argc, char* argv[])
 
             ind++;
             off++;
-            
-     
-          auto la = std::make_unique<SWAligner>(input_line,fa_string);
-          score_tmp = la->calculateScore();
-          pos_pred_tmp = la->getPos();
+            {
+                auto la = std::make_unique<SWAligner>(input_line,fa_string);
+                score_tmp = la->calculateScore();
+                pos_pred_tmp = la->getPos();
 
 #ifdef VERBOSE                           
-            if (i % 50 == 0) {
-              std::cout<<"Rank "<<rank<< " progress: " << i << std::endl;
-            } 
+                if (i % 50 == 0) {
+                  std::cout<<"Rank "<<rank<< " progress: " << i << std::endl;
+                } 
 #endif
-            i++;
-        
-            //Send data to the writer node
+                i++;
+            
+                //Send data to the writer node
 
-            sprintf(out.buff, "%.126s", input_line.c_str());
-            out.pos_pred = pos_pred_tmp;
-            out.score = score_tmp;
-       
-            MPI_Send(&out, 1, Outputtype, size-1, 123, comm);
+                sprintf(out.buff, "%.126s", input_line.c_str());
+                out.pos_pred = pos_pred_tmp;
+                out.score = score_tmp;
+            }
+            MPI_Send(&out, 1, Outputtype, size-1, 123, comm);   
        }
 #ifdef VERBOSE
        std::cout<<"Rank "<<rank<<" done("<<ind<<")"<<std::endl;
@@ -181,7 +183,6 @@ int main(int argc, char* argv[])
 #ifdef VERBOSE
         std::cout<<"Reader rank done"<<std::endl;
 #endif
-        
         
     }
            

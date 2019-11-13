@@ -50,8 +50,8 @@ void Similarity_Matrix::iterate_column(const std::function<double(const char &, 
 
 void Similarity_Matrix::iterate(const std::function<double(const char &, const char &)> &scoring_function,
                                               double gap_penalty) {
-  const unsigned int dim_x = similarity_matrix.rows();
-  const unsigned int dim_y = similarity_matrix.cols();
+  const unsigned int dim_x = raw_matrix.rows();
+  const unsigned int dim_y = raw_matrix.cols();
 
   for (Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i) {
     Eigen::Index local_i = i;
@@ -67,12 +67,12 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     }
     for (Eigen::Index k = starting_k; k <= ending_k; ++k) {
       index_tuple idx(local_i, k);
-      auto west = similarity_matrix(idx.first, idx.second - 1);
-      auto north = similarity_matrix(idx.first - 1, idx.second);
-      auto north_west = similarity_matrix(idx.first - 1, idx.second - 1);
+      auto west = raw_matrix(idx.first, idx.second - 1);
+      auto north = raw_matrix(idx.first - 1, idx.second);
+      auto north_west = raw_matrix(idx.first - 1, idx.second - 1);
       auto a = sequence_x[idx.first - 1];
       auto b = sequence_y[idx.second - 1];
-      similarity_matrix(local_i, k) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+      raw_matrix(local_i, k) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
       --local_i;
     }
   }

@@ -92,4 +92,14 @@ cd build
 cmake ..
 make test
 ../bin/tests
+
+#Coarse-grained MPI
+cd build
+cmake -DUSEMPI=ON ..
+make
+#do the next part once to prepare input for MPI
+cd ../py
+python reader.py mpi_prepare_input
+cd ..
+mpiexec -np {node_num, ie. 6} ./bin/mpi_sw_solve_small
 ```

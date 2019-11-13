@@ -40,6 +40,12 @@ class SAM:
             self.df = self.df.append(pd.DataFrame(row_dict))
         self.df = self.df.reset_index()
 
+def mpi_prepare(text_str):
+    text = text_str.split("\n")
+    f = open("../data/data_small/mpi_test_tiny.fq", "w")
+    for i in range(1, len(text), 4):
+        f.write(text[i]+'\n')
+    f.close()
 
 def single_fq_2_np(open_file_path):
     f = open(open_file_path,"r")
@@ -94,7 +100,9 @@ if __name__ == '__main__':
         gt_df.index.name = "index"
 
         gt_df.to_csv("../data/ground_truth.csv")
-        
+
+    elif sys.argv[1] == 'mpi_prepare_input':
+        mpi_prepare(general_readtxt("../data/data_small/output_tiny_30xCov1.fq"))
 
     elif sys.argv[1] == 'data_test':
         print('starting seqdata_test')

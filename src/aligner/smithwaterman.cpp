@@ -28,8 +28,13 @@ SWAligner<SMT>::SWAligner(std::string_view first_sequence,
     gap_penalty(gap_penalty),
     sequence_x(first_sequence),
     sequence_y(second_sequence),
+    consensus_x(),
+    consensus_y(),
     similarity_matrix(first_sequence, second_sequence),
-    scoring_function(std::move(scoring_function)) {}
+    scoring_function(std::move(scoring_function)) {
+  consensus_x.reserve(sequence_x.size());
+  consensus_y.reserve(sequence_x.size());
+}
 
 template <class SMT>
 void SWAligner<SMT>::traceback(index_tuple similarity_matrix_max) {

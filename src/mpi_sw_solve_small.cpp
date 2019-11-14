@@ -123,23 +123,22 @@ int main(int argc, char* argv[])
             ind++;
             off++;
             {
-                auto la = std::make_unique<SWAligner>(input_line,fa_string);
+                auto la = std::make_unique<SWAligner<Similarity_Matrix>>(input_line,fa_string);
                 score_tmp = la->calculateScore();
                 pos_pred_tmp = la->getPos();
+            }
 
 #ifdef VERBOSE                           
-                if (i % 50 == 0) {
-                  std::cout<<"Rank "<<rank<< " progress: " << i << std::endl;
-                } 
-#endif
-                i++;
-            
-                //Send data to the writer node
-
-                sprintf(out.buff, "%.126s", input_line.c_str());
-                out.pos_pred = pos_pred_tmp;
-                out.score = score_tmp;
+            if (i % 50 == 0) {
+              std::cout<<"Rank "<<rank<< " progress: " << i << std::endl;
             }
+#endif
+            i++;
+            //Send data to the writer node
+            sprintf(out.buff, "%.126s", input_line.c_str());
+            out.pos_pred = pos_pred_tmp;
+            out.score = score_tmp;
+
             MPI_Send(&out, 1, Outputtype, size-1, 123, comm);   
        }
 #ifdef VERBOSE

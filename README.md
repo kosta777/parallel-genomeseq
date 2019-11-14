@@ -140,6 +140,18 @@ python reader.py mpi_prepare_input
 cd ..
 mpiexec -np {node_num, ie. 6} ./bin/mpi_sw_solve_small
 
+#Coarse-grained OMP
+cd build
+cmake -DUSEOMP=ON ..
+make
+cd ..
+./bin/sw_solve_small 
+#create fixed number of subtasks by breaking the reference string into several pieces,
+#number of subtasks and length of overlaps are controlled by pLocalAligner constructor:
+#auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,4,2.0);
+#openmp automatically distribute subtasks to available processors
+#number of threads can be controlled by setting env like (execute in bash): `export OMP_NUM_THREADS=16`
+
 #Fine-grained OMP
 cd build
 cmake -DUSEOMP=ON ..

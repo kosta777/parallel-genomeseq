@@ -78,14 +78,20 @@ void SWAligner<SMT>::traceback(index_tuple similarity_matrix_max) {
 
 template <class SMT>
 double SWAligner<SMT>::calculateScore() {
+#ifdef USEOMP
+  similarity_matrix.sm_OMP_nthreads = sw_OMP_nthreads;
+#endif
   similarity_matrix.iterate(scoring_function, gap_penalty);
-
+#ifdef USEOMP
+  sw_iter_ad_i_times = similarity_matrix.sm_iter_ad_i_times;
+#endif
+  sw_iter_method = similarity_matrix.sm_iter_method;
+  sw_iter_ad_read_time = similarity_matrix.sm_iter_ad_read_time;
   auto [index_x, index_y, max] = similarity_matrix.find_index_of_maximum();
   max_score = max;
-
   traceback(index_tuple(index_x, index_y));
 #ifdef VERBOSE
-  raw_matrix.print_matrix();
+  similarity_matrix.print_matrix();
   std::cout << "POS: " << pos << std::endl;
 
   std::cout << consensus_x << std::endl;

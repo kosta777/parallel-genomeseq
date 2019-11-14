@@ -7,3 +7,4 @@ debug/*
 *.swp
 data/*.csv
 !build/eigen-3.3.7.zip
+mpi_*.fq

@@ -39,6 +39,12 @@ class Similarity_Matrix : public Abstract_Similarity_Matrix{
     void print_matrix() const override;
     const Eigen::MatrixXd &get_matrix() const override;
     double operator()(Eigen::Index row, Eigen::Index col) const override { return raw_matrix(row, col); };
+    std::string sm_iter_method;
+    float sm_iter_ad_read_time;  //anti-diagonal
+#ifdef USEOMP
+    int sm_OMP_nthreads;
+    Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
+#endif
   private:
     Eigen::MatrixXd raw_matrix; // column major
     std::string_view sequence_x;
@@ -53,12 +59,12 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
     std::tuple<Eigen::Index, Eigen::Index, double> find_index_of_maximum() const override;
     void print_matrix() const override;
     const Eigen::MatrixXd &get_matrix() const override { return raw_matrix; };
+    index_tuple rawindex2trueindex(index_tuple raw_index) const;
+    index_tuple trueindex2rawindex(index_tuple true_index) const;
     double operator()(Eigen::Index row, Eigen::Index col) const override {
       auto [ri, rj] = trueindex2rawindex(index_tuple(row, col));
       return raw_matrix(ri, rj);
     };
-    index_tuple rawindex2trueindex(index_tuple raw_index) const;
-    index_tuple trueindex2rawindex(index_tuple true_index) const;
   private:
     Eigen::MatrixXd raw_matrix; //column major
     Eigen::Index len_x;
@@ -66,5 +72,4 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
     std::string_view sequence_x;
     std::string_view sequence_y;
 };
-
 #endif

@@ -32,6 +32,8 @@ class SWAligner : public LocalAligner {
     int sw_OMP_nthreads;
     int sw_OMP_nthreads2;
     std::string sw_iter_method;
+    Eigen::VectorXf sw_iter_ad_i_times;  //anti-diagonal
+    Eigen::VectorXf sw_iter_ad_read_times;  //anti-diagonal
 
   private:
     unsigned int pos;

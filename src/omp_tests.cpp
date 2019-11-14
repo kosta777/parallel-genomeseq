@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <chrono>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -178,6 +179,8 @@ int main(int argc, char** argv) {
     double score_tmp;
     int pos_pred_tmp;
     i = 0;
+
+    Eigen::VectorXf calculateScore_times;
     while (std::getline(align_input, input_line)) {
       if (i>1){
         break;
@@ -207,13 +210,20 @@ int main(int argc, char** argv) {
   #endif
         {
           auto la = std::make_unique<SWAligner>(row[2],fa_string);
-	  la->sw_OMP_nthreads = 4;
-	  std::cout<<la->sw_OMP_nthreads<<std::endl;
-          score_tmp = la->calculateScore();
-          pos_pred_tmp = la->getPos();
+	  la->sw_OMP_nthreads = arg_nthreads;
+	  std::cout<<"sw_OMP_nthreads: "<<la->sw_OMP_nthreads<<std::endl;
 
-	  std::cout<<la->sw_OMP_nthreads2<<std::endl;
-	  std::cout<<la->sw_iter_method<<std::endl;
+	  auto start = std::chrono::high_resolution_clock::now();
+          score_tmp = la->calculateScore();
+          auto end = std::chrono::high_resolution_clock::now();
+	  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
+	  calculateScore_times.resize(i);
+	  calculateScore_times(i-1) = (float) duration.count();
+
+          pos_pred_tmp = la->getPos();
+	  std::cout<<"swaligner instance iter method: "<<la->sw_iter_method<<std::endl;
+          std::cout<<"sw_iter_ad_read_times: "<<la->sw_iter_ad_read_times<<"us"<<std::endl;
+
   #ifdef VERBOSE
           std::cout << "OMP test stuff" << std::endl;
           std::cout << la->pub_max_score << std::endl;
@@ -230,6 +240,9 @@ int main(int argc, char** argv) {
   
       i++;
     }
+
+    std::cout<<"calculateScore_times: "<<calculateScore_times<<"us"<<std::endl;
+
     align_input.close();
     align_output.close();
     std::cout << "Done, output file see: " << output_file_path << std::endl;

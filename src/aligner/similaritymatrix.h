@@ -32,6 +32,8 @@ class Similarity_Matrix {
     const Eigen::MatrixXd &get_matrix() const;
     std::string sm_iter_method;
     int sm_OMP_nthreads;
+    Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
+    Eigen::VectorXf sm_iter_ad_read_times;  //anti-diagonal
 
   private:
     Eigen::MatrixXd similarity_matrix;

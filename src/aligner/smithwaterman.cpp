@@ -80,9 +80,11 @@ void SWAligner::calculate_similarity_matrix() {
 }
 
 double SWAligner::calculateScore() {
-  sw_OMP_nthreads2 = sw_OMP_nthreads;
+  similarity_matrix.sm_OMP_nthreads = sw_OMP_nthreads;
   calculate_similarity_matrix();
   sw_iter_method = similarity_matrix.sm_iter_method;
+  sw_iter_ad_i_times = similarity_matrix.sm_iter_ad_i_times;
+  sw_iter_ad_read_times = similarity_matrix.sm_iter_ad_read_times;
 
   index_tuple max_idx = similarity_matrix.find_index_of_maximum();
 

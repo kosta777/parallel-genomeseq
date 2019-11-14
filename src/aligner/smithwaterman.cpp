@@ -21,43 +21,39 @@ SWAligner::SWAligner(std::string_view first_sequence,
     similarity_matrix(first_sequence, second_sequence),
     scoring_function(std::move(scoring_function)) {}
 
-void SWAligner::traceback(index_tuple similarity_matrix_max) {
+void SWAligner::traceback(index_tuple idx, unsigned int &preliminary_pos) {
   auto matrix = similarity_matrix.get_matrix();
 
-  auto [index_x, index_y] = similarity_matrix_max;
+  // stopping criterion
+  auto [index_x, index_y] = idx;
+  if (matrix(index_x - 1, index_y - 1) == 0) {
+    sequence_x.insert(index_x - 1, "(");
+    sequence_y.insert(index_y - 1, "(");
 
-  while(true) {
-    auto n1 = matrix(index_x - 1, index_y - 1);
-    auto n2 = matrix(index_x, index_y - 1);
-    auto n3 = matrix(index_x - 1, index_y);
+    pos = index_y;
+    return;
+  }
 
-    // stopping criterion
-    if (n1 == 0 || n2 == 0 || n3 == 0) {
-      consensus_x.push_back( sequence_x[index_x - 1] );
-      consensus_y.push_back( sequence_y[index_y - 1] );
-      pos = index_y;
-      break;
-    }
+  auto n1 = matrix(index_x - 1, index_y - 1);
+  auto n2 = matrix(index_x, index_y - 1);
+  auto n3 = matrix(index_x - 1, index_y);
 
-    // move north-west
-    if ((n1 >= n2) && (n1 >= n3)) {
-      consensus_x.push_back( sequence_x[index_x - 1] );
-      consensus_y.push_back( sequence_y[index_y - 1] );
-      index_x -= 1; 
-      index_y -= 1;
-    }
+  // move north-west
+  if ((n1 >= n2) && (n1 >= n3)) {
+    index_tuple new_idx(index_x - 1, index_y - 1);
+    traceback(new_idx, preliminary_pos);
+  }
     // move west
-    else if ((n2 >= n1) && (n2 >= n3)) {; 
-      consensus_x.push_back( '-' );
-      consensus_y.push_back( sequence_y[index_y - 1] );
-      index_y -= 1;
-    }
+  else if ((n2 >= n1) && (n2 >= n3)) {
+    sequence_x.insert(index_x, "-");
+    index_tuple new_idx(index_x, index_y - 1);
+    traceback(new_idx, preliminary_pos);
+  }
     // move north
-    else {
-      consensus_x.push_back( sequence_x[index_x - 1] );
-      consensus_y.push_back( '-' );
-      index_x -= 1;
-    }
+  else {
+    sequence_y.insert(index_y, "-");
+    index_tuple new_idx(index_x - 1, index_y);
+    traceback(new_idx, preliminary_pos);
   }
 }
 
@@ -83,11 +79,22 @@ void SWAligner::calculate_similarity_matrix() {
 }
 
 double SWAligner::calculateScore() {
+#ifdef USEOMP
+  similarity_matrix.sm_OMP_nthreads = sw_OMP_nthreads;
+#endif
   calculate_similarity_matrix();
+#ifdef USEOMP
+  sw_iter_ad_i_times = similarity_matrix.sm_iter_ad_i_times;
+#endif
+  sw_iter_method = similarity_matrix.sm_iter_method;
+  sw_iter_ad_read_time = similarity_matrix.sm_iter_ad_read_time;
 
-  auto max_idx = similarity_matrix.find_index_of_maximum();
+  index_tuple max_idx = similarity_matrix.find_index_of_maximum();
 
-  traceback(max_idx);
+  sequence_x.insert(max_idx.first, ")");
+  sequence_y.insert(max_idx.second, ")");
+
+  traceback(max_idx, pos);
 #ifdef VERBOSE
   similarity_matrix.print_matrix();
   std::cout << "POS: " << pos << std::endl;
@@ -97,4 +104,4 @@ double SWAligner::calculateScore() {
 #endif
   max_score = similarity_matrix.get_matrix()(max_idx.first, max_idx.second);
   return max_score;
-} 
+}

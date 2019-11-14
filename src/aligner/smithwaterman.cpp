@@ -97,4 +97,4 @@ double SWAligner::calculateScore() {
 #endif
   max_score = similarity_matrix.get_matrix()(max_idx.first, max_idx.second);
   return max_score;
-}
+} 

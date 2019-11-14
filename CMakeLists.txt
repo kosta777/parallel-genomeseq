@@ -49,10 +49,8 @@ endif()
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)
 add_library(libaligner ${ALIGNER_SRCS})
 target_link_libraries(libaligner PUBLIC Eigen)
+target_link_libraries(libaligner PUBLIC OpenMP::OpenMP_CXX)
 include_directories(${PROJECT_SOURCE_DIR}/src/aligner)
-if (USEOMP)
-  target_link_libraries(libaligner PUBLIC OpenMP::OpenMP_CXX)
-endif()
 
 add_executable(${TARGET_NAME} src/main.cpp)
 target_link_libraries(${TARGET_NAME} PUBLIC Eigen)
@@ -72,10 +70,8 @@ target_link_libraries(mpi_sw_solve_small PRIVATE libaligner)
 
 add_executable(omp_sw_solve_small src/omp_sw_solve_small.cpp)
 target_link_libraries(omp_sw_solve_small PRIVATE libaligner)
+target_link_libraries(omp_sw_solve_small PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(omp_sw_solve_small PUBLIC Eigen)
-if (USEOMP)
-  target_link_libraries(omp_sw_solve_small PUBLIC OpenMP::OpenMP_CXX)
-endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 

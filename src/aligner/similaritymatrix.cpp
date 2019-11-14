@@ -34,6 +34,7 @@ void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(const E
 
   auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
   for (Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i) {
+//    std::cout<<"----------------------------"<<std::endl;
     Eigen::Index local_i = i;
     Eigen::Index starting_k = 1;
     Eigen::Index ending_k = i;
@@ -63,20 +64,21 @@ void Similarity_Matrix::iterate_anti_diagonal(const std::function<double(const E
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_i_end-iter_ad_i_start);
     sm_iter_ad_i_times.resize(i);
     sm_iter_ad_i_times(i-1) = (float) duration.count();
+
 #endif
 #ifndef USEOMP
-    sm_iter_method = "SEQ";
+    iterate_method_check = "SEQ";
     for (Eigen::Index k = starting_k; k <= ending_k; ++k) {
       index_tuple idx(local_i, k);
       similarity_matrix(local_i, k) = callback(similarity_matrix, idx);
-
       --local_i;
     }
 #endif
   }
   auto iter_ad_read_end = std::chrono::high_resolution_clock::now();
   auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end-iter_ad_read_start);
-  sm_iter_ad_read_time = (float) read_duration.count();
+  sm_iter_ad_read_times.resize(1);
+  sm_iter_ad_read_times(1-1) = (float) read_duration.count();
 }
 
 const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {

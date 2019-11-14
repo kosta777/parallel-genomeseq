@@ -13,19 +13,20 @@
 #include <omp.h>
 #endif
 
+//int main() {
 int main(int argc, char** argv) {
-#ifdef USEOMP
   std::string argv1 = argv[1];
-  int arg_nreads = std::stoi(argv[2]);
-  int arg_nthreads = std::stoi(argv[3]);
+  int arg_nthreads = std::stoi(argv[2]);
 
   if (argv1.compare("0")==0) {
     std::cout<<"Hello omp"<<std::endl;
+#ifdef USEOMP
     #pragma omp parallel for default(none) num_threads(3)
     for(int n=0; n<6; ++n) printf("Thread: %d, Num: %d\n", omp_get_thread_num(), n);
+#endif
   }
 
-  else if (argv1.compare("solve_small")==0) {
+  else if (argv1.compare("single_read_test")==0) {
     const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
     const std::string input_file_path = "data/data_small_ground_truth.csv";
     const std::string output_file_path = "data/align_output.csv";
@@ -67,10 +68,9 @@ int main(int argc, char** argv) {
     int pos_pred_tmp;
     i = 0;
 
-    Eigen::VectorXf calculateScore_times = Eigen::VectorXf::Zero(arg_nreads);
+    Eigen::VectorXf calculateScore_times;
     while (std::getline(align_input, input_line)) {
-      std::cout<<"*** i="<<i<<" ***"<<std::endl;
-      if (i>arg_nreads){
+      if (i>1){
         break;
       }
       std::vector<std::string> row;
@@ -105,13 +105,12 @@ int main(int argc, char** argv) {
           score_tmp = la->calculateScore();
           auto end = std::chrono::high_resolution_clock::now();
 	  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
-	  float duration_val = duration.count();
-	  std::cout<<"i:"<<i<<", dur_val:"<<duration_val<<std::endl;
-	  calculateScore_times(i-1) = duration_val;
+	  calculateScore_times.resize(i);
+	  calculateScore_times(i-1) = (float) duration.count();
 
           pos_pred_tmp = la->getPos();
 	  std::cout<<"swaligner instance iter method: "<<la->sw_iter_method<<std::endl;
-          std::cout<<"sw_iter_ad_read_times: "<<la->sw_iter_ad_read_time<<"us"<<std::endl;
+          std::cout<<"sw_iter_ad_read_times: "<<la->sw_iter_ad_read_times<<"us"<<std::endl;
 
   #ifdef VERBOSE
           std::cout << "OMP test stuff" << std::endl;
@@ -130,8 +129,7 @@ int main(int argc, char** argv) {
       i++;
     }
 
-    std::cout<<"calculateScore_times (us): "<<std::endl;
-    std::cout<<calculateScore_times<<std::endl;
+    std::cout<<"calculateScore_times: "<<calculateScore_times<<"us"<<std::endl;
 
     align_input.close();
     align_output.close();
@@ -145,6 +143,7 @@ int main(int argc, char** argv) {
     std::cout<<test_vec<<std::endl;
     std::cout<<test_vec.size()<<std::endl;
 
+#ifdef USEOMP
     omp_set_num_threads(arg_nthreads);
     #pragma omp parallel for default(shared)
     for(int i=0; i<test_vec.size(); i++){
@@ -153,6 +152,7 @@ int main(int argc, char** argv) {
       test_vec(i) = omp_get_thread_num();
       printf("i:%d, value assigned \n\n",i);
     }
+#endif
     std::cout<<test_vec<<std::endl;
   }
 
@@ -163,6 +163,7 @@ int main(int argc, char** argv) {
     std::cout<<test_vec<<std::endl;
     std::cout<<test_vec.size()<<std::endl;
 
+#ifdef USEOMP
     omp_set_num_threads(arg_nthreads);
     #pragma omp parallel for default(shared)
     for(int i=0; i<test_vec.size(); i++){
@@ -172,6 +173,7 @@ int main(int argc, char** argv) {
       test_vec(i) = cur_thread_num;
       printf("i:%d, value assigned \n\n",i);
     }
+#endif
     std::cout<<test_vec<<std::endl;
   }
 
@@ -182,6 +184,7 @@ int main(int argc, char** argv) {
     std::cout<<test_vec<<std::endl;
     std::cout<<test_vec.size()<<std::endl;
 
+#ifdef USEOMP
     omp_set_num_threads(arg_nthreads);
     int cur_thread_num;
     int i;
@@ -194,6 +197,7 @@ int main(int argc, char** argv) {
       test_vec(i) = cur_thread_num;
       printf("i:%d, value assigned \n\n",i);
     }
+#endif
     std::cout<<test_vec<<std::endl;
   }
 
@@ -227,16 +231,20 @@ int main(int argc, char** argv) {
 
   else if (argv1.compare("1")==0) {
     std::cout<<"Hello omp"<<std::endl;
+#ifdef USEOMP
     omp_set_num_threads(arg_nthreads);
     #pragma omp parallel for default(shared)
     for(int n=0; n<15; ++n) printf("Thread: %d, Num: %d\n", omp_get_thread_num(), n);
+#endif
   }
 
   else if (argv1.compare("2")==0) {
     std::cout<<"Hello omp"<<std::endl;
+#ifdef USEOMP
     #pragma omp parallel for default(none) num_threads(3)
     for(int n=0; n<6; ++n) printf("Thread: %d, Num: %d\n", omp_get_thread_num(), n);
-  }
 #endif
+  }
+
 }
 

@@ -28,12 +28,12 @@ class SWAligner : public LocalAligner {
     std::string_view getConsensus_x() const override {return sequence_x;}
     std::string_view getConsensus_y() const override {return sequence_y;}
     const Similarity_Matrix& getSimilarity_matrix() const override { return similarity_matrix;}
-    std::string sw_iter_method;
-    float sw_iter_ad_read_time;  //anti-diagonal
-#ifdef USEOMP
+    double pub_max_score;
     int sw_OMP_nthreads;
+    int sw_OMP_nthreads2;
+    std::string sw_iter_method;
     Eigen::VectorXf sw_iter_ad_i_times;  //anti-diagonal
-#endif
+    Eigen::VectorXf sw_iter_ad_read_times;  //anti-diagonal
 
   private:
     unsigned int pos;

@@ -4,7 +4,6 @@
 #include "localaligner.h"
 #include "smithwaterman.h"
 
-
 namespace {
   class SWAligner_Test : public testing::Test {
     protected:
@@ -47,5 +46,13 @@ namespace {
         refrence_m, 
         la->getSimilarity_matrix().get_matrix()
     );
+  }
+
+  TEST_F(SWAligner_Test, Verify_consensus_strings) {
+    std::string_view expected_consensus_x = "CAGTTG";
+    std::string_view expected_consensus_y = "CA-TTG";
+
+    ASSERT_EQ(la->getConsensus_x(), expected_consensus_x);
+    ASSERT_EQ(la->getConsensus_y(), expected_consensus_y);
   }
 }

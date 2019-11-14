@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-
-
+#include <memory>
 #include "localaligner.h"
 #include "smithwaterman.h"
+#include "similaritymatrix.h"
 
 namespace {
   class SWAligner_Test : public testing::Test {
@@ -13,11 +13,11 @@ namespace {
         std::string sequence_x = "GGTTGACTA";
         std::string sequence_y = "TGTTACGG";
 
-        la = new SWAligner(sequence_x, sequence_y);
+        la = std::make_unique<SWAligner<Similarity_Matrix>>(sequence_x, sequence_y);
         la->calculateScore();
       }
 
-      LocalAligner* la;
+      std::unique_ptr<SWAligner<Similarity_Matrix>> la;
   };
 
 
@@ -39,11 +39,11 @@ namespace {
       0,  0,  2,  1,  3,  8, 13, 11,  9,
       0,  3,  1,  5,  4,  6, 11, 10,  8,
       0,  1,  0,  3,  2,  7,  9,  8,  7;
-   
 
-    ASSERT_PRED2( 
+
+    ASSERT_PRED2(
         [](const Eigen::MatrixXd &lhs, const Eigen::MatrixXd &rhs) { return lhs.isApprox(rhs, 1e-4);},
-        refrence_m, 
+        refrence_m,
         la->getSimilarity_matrix().get_matrix()
     );
   }

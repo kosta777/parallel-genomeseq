@@ -31,6 +31,16 @@ cd build
 cmake .. -DDEBUG=ON #-DVERBOSE=ON #if need verbose output
 ```
 
+### Building OpenMP version:
+
+```bash
+cd build
+cmake .. -DUSEOMP=ON
+make
+cd ..
+./bin/sw_solve_small #sw_solve_small is equipped with openmp-parallellocalaligner
+```
+
 ### Building MPI version:
 
 ```bash
@@ -48,17 +58,21 @@ The rule of thumb is do not break serial code when MPI and openMP is not availab
 //Usage
 #include <memory>
 {
-  auto la = std::make_unique<SWAligner>(str1,str2);
+  auto la = std::make_unique<SWAligner<Similarity_Matrix>>(str1,str2); //or SWAligner<Similarity_Matrix_Skewed>
+  // or use parallel LocalAligner breaking ref into 4 substrings and setting overlaplength = samplelength * 2.0
+  auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,4,2.0);
   la->calculateScore();
-  \\... = la->get...();
+  //... = la->get...();
 }
 //Constructor
-class SWAligner : public LocalAligner {
+template <class Similarity_Matrix_Type>
+class SWAligner : public LocalAligner <Similarity_Matrix_Type> {
   public:
     SWAligner(std::string_view, std::string_view);
     SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
 }
 //API
+template <class Similarity_Matrix_Type>
 class LocalAligner {
   public:
     virtual double calculateScore() = 0;
@@ -66,7 +80,28 @@ class LocalAligner {
     virtual unsigned int getPos() const = 0;
     virtual std::string_view getConsensus_x() const = 0;
     virtual std::string_view getConsensus_y() const = 0;
-    virtual const Similarity_Matrix& getSimilarity_matrix() const =0;
+    virtual const Similarity_Matrix_Type& getSimilarity_matrix() const =0;
+};
+template <class Similarity_Matrix_Type, class LocalAligner_Type>
+class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Type, LocalAligner_Type> {
+  public:
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, double);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, std::function<double(const char &, const char &)> &&);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, std::function<double(const char &, const char &)> &&, double);
+    double calculateScore();
+    double getScore() const;
+    unsigned int getPos() const;
+};
+//API for similarity matrix
+class Abstract_Similarity_Matrix{
+  public:
+    virtual void iterate(const std::function<double(const char &, const char &)> &scoring_function,
+                         double gap_penalty) = 0;
+    virtual std::tuple<Eigen::Index, Eigen::Index, double> find_index_of_maximum() const = 0;
+    virtual void print_matrix() const = 0;
+    virtual const Eigen::MatrixXd &get_matrix() const = 0;
+    virtual double operator()(Eigen::Index row, Eigen::Index col) const = 0;
 };
 ```
 

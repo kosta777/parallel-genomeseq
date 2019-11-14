@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     std::string output_header_line;
 
     double score_tmp;
-    int pos_pred_tmp;
+    Eigen::Index pos_pred_tmp;
     i = 0;
 
     Eigen::VectorXf calculateScore_times = Eigen::VectorXf::Zero(arg_nreads);
@@ -96,9 +96,7 @@ int main(int argc, char **argv) {
         std::cout << row[2] << std::endl;
 #endif
         {
-          auto la = std::make_unique<SWAligner>(row[2], fa_string);
-          la->sw_OMP_nthreads = arg_nthreads;
-          std::cout << "sw_OMP_nthreads: " << la->sw_OMP_nthreads << std::endl;
+          auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2], fa_string);
 
           auto start = std::chrono::high_resolution_clock::now();
           score_tmp = la->calculateScore();
@@ -109,8 +107,6 @@ int main(int argc, char **argv) {
           calculateScore_times(i - 1) = duration_val;
 
           pos_pred_tmp = la->getPos();
-          std::cout << "swaligner instance iter method: " << la->sw_iter_method << std::endl;
-          std::cout << "sw_iter_ad_read_times: " << la->sw_iter_ad_read_time << "us" << std::endl;
 
 #ifdef VERBOSE
           std::cout << "OMP test stuff" << std::endl;

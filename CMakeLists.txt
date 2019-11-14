@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12.0)
 include("cmake/warning_flags.cmake")
+include(ProcessorCount)
 option(HAS_CLANG_TIDY "use clang-tidy" OFF)
 include("cmake/clang_tidy.cmake")
 set(CMAKE_CXX_STANDARD 17)

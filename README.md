@@ -59,6 +59,8 @@ The rule of thumb is do not break serial code when MPI and openMP is not availab
 #include <memory>
 {
   auto la = std::make_unique<SWAligner<Similarity_Matrix>>(str1,str2); //or SWAligner<Similarity_Matrix_Skewed>
+  // or use parallel LocalAligner breaking ref into 4 substrings and setting overlaplength = samplelength * 2.0
+  auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,4,2.0);
   la->calculateScore();
   //... = la->get...();
 }
@@ -79,6 +81,17 @@ class LocalAligner {
     virtual std::string_view getConsensus_x() const = 0;
     virtual std::string_view getConsensus_y() const = 0;
     virtual const Similarity_Matrix_Type& getSimilarity_matrix() const =0;
+};
+template <class Similarity_Matrix_Type, class LocalAligner_Type>
+class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Type, LocalAligner_Type> {
+  public:
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, double);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, std::function<double(const char &, const char &)> &&);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, std::function<double(const char &, const char &)> &&, double);
+    double calculateScore();
+    double getScore() const;
+    unsigned int getPos() const;
 };
 ```
 

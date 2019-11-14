@@ -5,19 +5,27 @@
 
 template <class SMT>
 SWAligner<SMT>::SWAligner(std::string_view first_sequence, std::string_view second_sequence) :
-    pos(0),
-    max_score(-1),
-    sequence_x(first_sequence),
-    sequence_y(second_sequence),
-    similarity_matrix(first_sequence, second_sequence),
-    scoring_function([](const char &a, const char &b) { return a == b ? 3.0 : -3.0; }) {}
+    SWAligner(first_sequence, second_sequence, [](const char &a, const char &b) { return a == b ? 3.0 : -3.0; }, 2.0) {}
+
+template <class SMT>
+SWAligner<SMT>::SWAligner(std::string_view first_sequence,
+                          std::string_view second_sequence,
+                          double gap_penalty) :
+    SWAligner(first_sequence, second_sequence, [](const char &a, const char &b) { return a == b ? 3.0 : -3.0; }, gap_penalty) {}
+
+template <class SMT>
+SWAligner<SMT>::SWAligner(std::string_view first_sequence,
+                          std::string_view second_sequence,
+                          std::function<double(const char &, const char &)> &&scoring_function) :
+    SWAligner(first_sequence, second_sequence, std::move(scoring_function), 2.0) {}
 
 template <class SMT>
 SWAligner<SMT>::SWAligner(std::string_view first_sequence,
                      std::string_view second_sequence,
-                     std::function<double(const char &, const char &)> &&scoring_function) :
+                     std::function<double(const char &, const char &)> &&scoring_function, double gap_penalty) :
     pos(0),
     max_score(-1),
+    gap_penalty(gap_penalty),
     sequence_x(first_sequence),
     sequence_y(second_sequence),
     similarity_matrix(first_sequence, second_sequence),
@@ -60,7 +68,6 @@ void SWAligner<SMT>::traceback(index_tuple idx, unsigned int &preliminary_pos) {
 
 template <class SMT>
 double SWAligner<SMT>::calculateScore() {
-  auto gap_penalty = 2;
   similarity_matrix.iterate(scoring_function, gap_penalty);
 
   auto [index_x, index_y, max] = similarity_matrix.find_index_of_maximum();

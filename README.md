@@ -31,6 +31,16 @@ cd build
 cmake .. -DDEBUG=ON #-DVERBOSE=ON #if need verbose output
 ```
 
+### Building OpenMP version:
+
+```bash
+cd build
+cmake .. -DUSEOMP=ON
+make
+cd ..
+./bin/sw_solve_small #sw_solve_small is equipped with openmp-parallellocalaligner
+```
+
 ### Building MPI version:
 
 ```bash

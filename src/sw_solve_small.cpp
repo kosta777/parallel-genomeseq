@@ -6,6 +6,9 @@
 #include "localaligner.h"
 #include "smithwaterman.h"
 #include "similaritymatrix.h"
+#ifdef USEOMP
+#include "plocalaligner.h"
+#endif
 
 int main() {
   const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
@@ -73,7 +76,11 @@ int main() {
       std::cout << row[2] << std::endl;
 #endif
       {
-        auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2],fa_string);
+#ifdef USEOMP
+        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string);
+#else
+        auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2],fa_string);
+#endif
         score_tmp = la->calculateScore();
         pos_pred_tmp = la->getPos();
       }

@@ -12,7 +12,9 @@ template <class Similarity_Matrix_Type>
 class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
   public:
     SWAligner(std::string_view, std::string_view);
+    SWAligner(std::string_view, std::string_view, double);
     SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
+    SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&, double);
     /*
      * Maximum score in similarity matrix.
      */
@@ -33,6 +35,7 @@ class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
   private:
     unsigned int pos;
     double max_score;
+    double gap_penalty;
     std::string sequence_x;
     std::string sequence_y;
     Similarity_Matrix_Type similarity_matrix;

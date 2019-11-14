@@ -2,7 +2,6 @@
 #include <iostream>
 #include <algorithm>
 #include <Eigen/Dense>
-#include <chrono>
 
 #ifdef USEOMP
 #include <omp.h>
@@ -60,7 +59,6 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
   const unsigned int dim_x = raw_matrix.rows();
   const unsigned int dim_y = raw_matrix.cols();
 
-  auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
   for (Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i) {
     Eigen::Index local_i = i;
     Eigen::Index starting_k = 1;
@@ -75,7 +73,7 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     }
 
 #ifdef USEOMP
-    int ad_len = ending_k-starting_k+1; //anti diagonal length
+    auto ad_len = ending_k-starting_k+1; //anti diagonal length
     Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
     Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
     Eigen::Index ad_idx;
@@ -89,9 +87,7 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
       auto b = sequence_y[idx.second - 1];
       raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
     }
-#endif
-#ifndef USEOMP
-    sm_iter_method = "SEQ";
+#else
     for (Eigen::Index k = starting_k; k <= ending_k; ++k) {
       index_tuple idx(local_i, k);
       auto west = raw_matrix(idx.first, idx.second - 1);
@@ -104,8 +100,6 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     }
 #endif
   }
-  auto iter_ad_read_end = std::chrono::high_resolution_clock::now();
-  auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end-iter_ad_read_start);
 }
 
 const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {

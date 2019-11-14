@@ -83,7 +83,15 @@ void SWAligner::calculate_similarity_matrix() {
 }
 
 double SWAligner::calculateScore() {
+#ifdef USEOMP
+  similarity_matrix.sm_OMP_nthreads = sw_OMP_nthreads;
+#endif
   calculate_similarity_matrix();
+#ifdef USEOMP
+  sw_iter_ad_i_times = similarity_matrix.sm_iter_ad_i_times;
+#endif
+  sw_iter_method = similarity_matrix.sm_iter_method;
+  sw_iter_ad_read_time = similarity_matrix.sm_iter_ad_read_time;
 
   auto max_idx = similarity_matrix.find_index_of_maximum();
 

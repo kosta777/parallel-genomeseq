@@ -12,8 +12,11 @@ class SWAligner : public LocalAligner {
   public:
     SWAligner(std::string_view, std::string_view);
     SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
+
     /*
-     * Maximum score in similarity matrix.
+     * Calculate similarity matrix entries and traceback.
+     * 
+     * @return Maximum score in the similarity matrix.
      */
     double calculateScore() override;
 
@@ -24,18 +27,28 @@ class SWAligner : public LocalAligner {
      *
      * @return 1-based (as opposed to standard CS 0-based) counter.
      */
-    unsigned int getPos() const override {return pos;}
-    std::string_view getConsensus_x() const override {return sequence_x;}
-    std::string_view getConsensus_y() const override {return sequence_y;}
-    const Similarity_Matrix& getSimilarity_matrix() const override { return similarity_matrix;}
+    unsigned int getPos() const override { return pos; }
+
+    std::string_view getConsensus_x() const override { return consensus_x; }
+    std::string_view getConsensus_y() const override { return consensus_y; }
+    const Similarity_Matrix& getSimilarity_matrix() const override { return similarity_matrix; }
 
   private:
     unsigned int pos;
     double max_score;
+
     std::string sequence_x;
     std::string sequence_y;
+
+    /*
+     * Portions of sequences x and y found by the algorithm as best match.
+     * In reverse order. Gaps are denoted by a dash symbol "-".
+     */
+    std::string consensus_x;
+    std::string consensus_y;
+
     Similarity_Matrix similarity_matrix;
-    void traceback(index_tuple, unsigned int &);
+    void traceback(index_tuple);
     void calculate_similarity_matrix();
     std::function<double(const char &, const char &)> scoring_function;
 };

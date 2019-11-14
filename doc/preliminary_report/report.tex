@@ -10,6 +10,7 @@
 \usepackage{tikz}
 \usepackage{graphicx}
 \usepackage{caption}
+\usepackage{pdfpages}
 
 % Example definitions.
 % --------------------
@@ -57,18 +58,20 @@
 
 \section{Introduction}
 
-Genome sequencing has become a promising field tool that is hypothesized to facilitate researchers to find the root cause (and subsequently the cure) for a number of genetic diseases in the future. \cite{Maekinen.2015}
+Genome sequencing has become a promising field tool that is hypothesized to facilitate researchers to find the root cause (and subsequently the cure) for a number of genetic diseases in the future. Of central concern for this ambitious task is the similarity between two sequence portions (effectively two strings). Finding an a close alignment of two sequences indicates to a researcher the possibility of a mutation. The Smith-Waterman algorithm was originally invented for that purpose and different (usually heuristic) variations of it power standard software such as BLAST and FASTA \cite{Maekinen.2015}.
 
 % Diviation from proposal
-The investigation into three different algorithms in the initial proposal (see attached below) was discarded in favor of a more thorough and deeper look into one of them (namely Smith-Waterman). From a computer science perspective all of these algorithms are rather similar, consequently the team decided to focus its efforts on the one which is most relevant in the given domain.
+The investigation into three different algorithms listed in the initial proposal (see attached below) was discarded in favor of a more thorough and deeper look into a single one of them (namely Smith-Waterman). From a computer science perspective all of these algorithms are rather similar, consequently the team decided to focus its efforts on the one which is most relevant in the given domain.
 
 \section{Parallelization strategy}
 In our first attempts two different strategies were pursued that either exploit the inherent structure of the problem or the overall nature of the problem.
 
-\mypar{Fine-grained approach} A major step of Smith-Waterman algorithm is the calculation of a similarity matrix which measure how closely parts of the tow sequences resemble each other. Each entry in the matrix depends only on its neighbors to the west, north, and north-west. For example, calculating the value encircled in red in Figure 1 only depends on the black encircled entries. Exploiting these data dependencies, each anti-diagonal in the similarity matrix may be calculated independently from each other. 
+\mypar{Fine-grained approach} A major step of the Smith-Waterman algorithm is the calculation of a similarity matrix which measure how closely parts of the tow sequences resemble each other. Each entry in the matrix depends only on its neighbors to the west, north, and north-west. For example, calculating the value encircled in red in Figure 1 only depends on the black encircled entries. Exploiting these data dependencies, each anti-diagonal in the similarity matrix may be calculated independently from each other. This is general approach taken by a number of papers \cite[Sec. 2]{Chen.2010}. We plan to run our benchmark also against those projects as soon as a more representative test example is determined.
+
+The current implementation utilizes OpenMP to split calculations along the anti-diagonal among multiple cores.
 
 \setlength{\extrarowheight}{1.5mm}
-\begin{figure}[!h]
+\begin{figure}
 	\centering
 	$\begin{pNiceMatrix}%
 		[name=mymatrix,
@@ -93,7 +96,9 @@ In our first attempts two different strategies were pursued that either exploit 
 	\caption{Data dependencies between entries}
 \end{figure}%
 
-\mypar{Coarse-grained approach} 
+
+
+\mypar{Coarse-grained approach} Usually researchers are not solely interested in how one particular sequence can be aligned optimally to another. Biologically more interesting is the comparison of one  sequence towards a large reference database. For this purpose, we split our mock library file among MPI (message passing interface) nodes and let each one run the algorithm separately. This task is insofar optimal for parallel computers as that no communication between nodes is ever necessary with the exception of generating the output file.
 
 
 
@@ -123,6 +128,10 @@ In our first attempts two different strategies were pursued that either exploit 
 % -------------------------------------------------------------------------
 \bibliographystyle{IEEEbib}
 \bibliography{bibl_conf}
+
+\clearpage
+
+\includepdf{../proposal/DPHPC_proposal.pdf}
 
 \end{document}
 

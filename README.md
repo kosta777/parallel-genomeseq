@@ -93,6 +93,16 @@ class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Ty
     double getScore() const;
     unsigned int getPos() const;
 };
+//API for similarity matrix
+class Abstract_Similarity_Matrix{
+  public:
+    virtual void iterate(const std::function<double(const char &, const char &)> &scoring_function,
+                         double gap_penalty) = 0;
+    virtual std::tuple<Eigen::Index, Eigen::Index, double> find_index_of_maximum() const = 0;
+    virtual void print_matrix() const = 0;
+    virtual const Eigen::MatrixXd &get_matrix() const = 0;
+    virtual double operator()(Eigen::Index row, Eigen::Index col) const = 0;
+};
 ```
 
 ## Usage

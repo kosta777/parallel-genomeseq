@@ -137,4 +137,12 @@ cd ../py
 python reader.py mpi_prepare_input
 cd ..
 mpiexec -np {node_num, ie. 6} ./bin/mpi_sw_solve_small
+
+#Fine-grained OMP
+cd build
+cmake -DUSEOMP=ON ..
+make
+cd ..
+bin/omp_sw_solve_small solve_small n_reads n_threads
+(e.g.) bin/omp_sw_solve_small solve_small 3 2
 ```

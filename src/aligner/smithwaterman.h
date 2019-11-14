@@ -33,12 +33,6 @@ class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
     std::string_view getConsensus_x() const override { return consensus_x; }
     std::string_view getConsensus_y() const override { return consensus_y; }
     const Similarity_Matrix_Type& getSimilarity_matrix() const override { return similarity_matrix; }
-    std::string sw_iter_method;
-    float sw_iter_ad_read_time;  //anti-diagonal
-#ifdef USEOMP
-    int sw_OMP_nthreads;
-    Eigen::VectorXf sw_iter_ad_i_times;  //anti-diagonal
-#endif
   private:
     void traceback(index_tuple);
     unsigned int pos;

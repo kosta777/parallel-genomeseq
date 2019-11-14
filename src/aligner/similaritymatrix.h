@@ -39,12 +39,6 @@ class Similarity_Matrix : public Abstract_Similarity_Matrix{
     void print_matrix() const override;
     const Eigen::MatrixXd &get_matrix() const override;
     double operator()(Eigen::Index row, Eigen::Index col) const override { return raw_matrix(row, col); };
-    std::string sm_iter_method;
-    float sm_iter_ad_read_time;  //anti-diagonal
-#ifdef USEOMP
-    int sm_OMP_nthreads;
-    Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
-#endif
   private:
     Eigen::MatrixXd raw_matrix; // column major
     std::string_view sequence_x;

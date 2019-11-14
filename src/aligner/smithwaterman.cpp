@@ -43,11 +43,11 @@ void SWAligner::traceback(index_tuple similarity_matrix_max) {
     if ((n1 >= n2) && (n1 >= n3)) {
       consensus_x.push_back( sequence_x[index_x - 1] );
       consensus_y.push_back( sequence_y[index_y - 1] );
-      index_x -= 1;
+      index_x -= 1; 
       index_y -= 1;
     }
     // move west
-    else if ((n2 >= n1) && (n2 >= n3)) {;
+    else if ((n2 >= n1) && (n2 >= n3)) {; 
       consensus_x.push_back( '-' );
       consensus_y.push_back( sequence_y[index_y - 1] );
       index_y -= 1;
@@ -83,17 +83,7 @@ void SWAligner::calculate_similarity_matrix() {
 }
 
 double SWAligner::calculateScore() {
-#ifdef USEOMP
-  similarity_matrix.sm_OMP_nthreads = sw_OMP_nthreads;
-#endif
-
   calculate_similarity_matrix();
-
-#ifdef USEOMP
-  sw_iter_ad_i_times = similarity_matrix.sm_iter_ad_i_times;
-#endif
-  sw_iter_method = similarity_matrix.sm_iter_method;
-  sw_iter_ad_read_time = similarity_matrix.sm_iter_ad_read_time;
 
   auto max_idx = similarity_matrix.find_index_of_maximum();
 

@@ -45,4 +45,5 @@ class SWAligner : public LocalAligner {
     void calculate_similarity_matrix();
     std::function<double(const char &, const char &)> scoring_function;
 };
+
 #endif

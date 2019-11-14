@@ -32,37 +32,42 @@ SWAligner<SMT>::SWAligner(std::string_view first_sequence,
     scoring_function(std::move(scoring_function)) {}
 
 template <class SMT>
-void SWAligner<SMT>::traceback(index_tuple idx, unsigned int &preliminary_pos) {
+void SWAligner<SMT>::traceback(index_tuple similarity_matrix_max) {
   // stopping criterion
-  auto [index_x, index_y] = idx;
-  if (similarity_matrix(index_x - 1, index_y - 1) == 0) {
-    sequence_x.insert(index_x - 1, "(");
-    sequence_y.insert(index_y - 1, "(");
+  auto [index_x, index_y] = similarity_matrix_max;
 
-    pos = index_y;
-    return;
-  }
+  while(true) {
+    auto n1 = similarity_matrix(index_x - 1, index_y - 1);
+    auto n2 = similarity_matrix(index_x, index_y - 1);
+    auto n3 = similarity_matrix(index_x - 1, index_y);
 
-  auto n1 = similarity_matrix(index_x - 1, index_y - 1);
-  auto n2 = similarity_matrix(index_x, index_y - 1);
-  auto n3 = similarity_matrix(index_x - 1, index_y);
+    // stopping criterion
+    if (n1 == 0 || n2 == 0 || n3 == 0) {
+      consensus_x.push_back( sequence_x[index_x - 1] );
+      consensus_y.push_back( sequence_y[index_y - 1] );
+      pos = index_y;
+      break;
+    }
 
-  // move north-west
-  if ((n1 >= n2) && (n1 >= n3)) {
-    index_tuple new_idx(index_x - 1, index_y - 1);
-    traceback(new_idx, preliminary_pos);
-  }
+    // move north-west
+    if ((n1 >= n2) && (n1 >= n3)) {
+      consensus_x.push_back( sequence_x[index_x - 1] );
+      consensus_y.push_back( sequence_y[index_y - 1] );
+      index_x -= 1;
+      index_y -= 1;
+    }
     // move west
-  else if ((n2 >= n1) && (n2 >= n3)) {
-    sequence_x.insert(index_x, "-");
-    index_tuple new_idx(index_x, index_y - 1);
-    traceback(new_idx, preliminary_pos);
-  }
+    else if ((n2 >= n1) && (n2 >= n3)) {;
+      consensus_x.push_back( '-' );
+      consensus_y.push_back( sequence_y[index_y - 1] );
+      index_y -= 1;
+    }
     // move north
-  else {
-    sequence_y.insert(index_y, "-");
-    index_tuple new_idx(index_x - 1, index_y);
-    traceback(new_idx, preliminary_pos);
+    else {
+      consensus_x.push_back( sequence_x[index_x - 1] );
+      consensus_y.push_back( '-' );
+      index_x -= 1;
+    }
   }
 }
 
@@ -73,16 +78,13 @@ double SWAligner<SMT>::calculateScore() {
   auto [index_x, index_y, max] = similarity_matrix.find_index_of_maximum();
   max_score = max;
 
-  sequence_x.insert(index_x, ")");
-  sequence_y.insert(index_y, ")");
-
-  traceback(index_tuple(index_x, index_y), pos);
+  traceback(index_tuple(index_x, index_y));
 #ifdef VERBOSE
   raw_matrix.print_matrix();
   std::cout << "POS: " << pos << std::endl;
 
-  std::cout << sequence_x << std::endl;
-  std::cout << sequence_y << std::endl;
+  std::cout << consensus_x << std::endl;
+  std::cout << consensus_y << std::endl;
 #endif
   return max;
 }

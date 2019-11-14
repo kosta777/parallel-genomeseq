@@ -68,6 +68,9 @@ target_link_libraries(bwt_fm PRIVATE libaligner)
 add_executable(sw_solve_small src/sw_solve_small.cpp)
 target_link_libraries(sw_solve_small PRIVATE libaligner)
 
+add_executable(mpi_sw_solve_small src/mpi_sw_solve_small.cpp)
+target_link_libraries(mpi_sw_solve_small PRIVATE libaligner)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 include(cmake/GetGTest.cmake)

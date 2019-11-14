@@ -68,6 +68,11 @@ target_link_libraries(sw_solve_small PRIVATE libaligner)
 add_executable(mpi_sw_solve_small src/mpi_sw_solve_small.cpp)
 target_link_libraries(mpi_sw_solve_small PRIVATE libaligner)
 
+add_executable(omp_sw_solve_small src/omp_sw_solve_small.cpp)
+target_link_libraries(omp_sw_solve_small PRIVATE libaligner)
+target_link_libraries(omp_sw_solve_small PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(omp_sw_solve_small PUBLIC Eigen)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 include(cmake/GetGTest.cmake)
@@ -84,10 +89,6 @@ endif ()
 if (USEOMP)
   target_link_libraries(${TARGET_NAME} PUBLIC OpenMP::OpenMP_CXX)
   target_link_libraries(tests PUBLIC OpenMP::OpenMP_CXX)
-  add_executable(omp_tests src/omp_tests.cpp)
-  target_link_libraries(omp_tests PRIVATE libaligner)
-  target_link_libraries(omp_tests PUBLIC OpenMP::OpenMP_CXX)
-  target_link_libraries(omp_tests PUBLIC Eigen)
 endif ()
 
 if(CLANG_TIDY_EXE)

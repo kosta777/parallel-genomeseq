@@ -92,6 +92,8 @@ class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Ty
     double calculateScore();
     double getScore() const;
     unsigned int getPos() const;
+    std::string_view getConsensus_x() const;
+    std::string_view getConsensus_y() const;
 };
 //API for similarity matrix
 class Abstract_Similarity_Matrix{

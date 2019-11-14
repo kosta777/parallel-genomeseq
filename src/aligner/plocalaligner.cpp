@@ -28,9 +28,14 @@ OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view firs
     gap_penalty(gap_penalty),
     overlap_ratio(overlap_ratio),
     npiece(npiece),
+    consensus_x(),
+    consensus_y(),
     sequence_x(first_sequence),
     sequence_y(second_sequence),
-    scoring_function(std::move(scoring_function)) {}
+    scoring_function(std::move(scoring_function)) {
+  consensus_x.reserve(sequence_x.size());
+  consensus_y.reserve(sequence_x.size());
+}
 
 std::vector<std::pair<size_t, size_t>> _make_string_range(int npiece, size_t shortstringlength ,size_t longstringlength, double overlap_ratio) {
   auto overlaplength = (size_t)(shortstringlength * overlap_ratio);
@@ -82,6 +87,8 @@ double OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
     auto la = std::make_unique<LAT>(sequence_x, sequence_y_i);
     la -> calculateScore();
     pos = la -> getPos() + left;
+    consensus_x = la -> getConsensus_x();
+    consensus_y = la -> getConsensus_y();
   }
   return max_score;
 }

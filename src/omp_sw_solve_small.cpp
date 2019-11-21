@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
           calculateScore_times(i - 1) = duration_val;
 
           pos_pred_tmp = la->getPos();
+          std::cout<<"sw_iter_ad_read_times: "<<la->sw_iter_ad_read_time<<"us"<<std::endl;
 
 #ifdef VERBOSE
           std::cout << "OMP test stuff" << std::endl;

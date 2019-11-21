@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <Eigen/Dense>
+#include <chrono>
 
 #ifdef USEOMP
 #include <omp.h>
@@ -59,6 +60,9 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
   const unsigned int dim_x = raw_matrix.rows();
   const unsigned int dim_y = raw_matrix.cols();
 
+  int omp_n_threads;
+  int omp_n_threads2;
+  auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
   for (Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i) {
     Eigen::Index local_i = i;
     Eigen::Index starting_k = 1;
@@ -77,7 +81,10 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
     Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
     Eigen::Index ad_idx;
-    #pragma omp parallel for default(none) shared(ad_len, k_vec, local_i_vec, gap_penalty, scoring_function) private(ad_idx)
+
+    omp_n_threads2 = omp_get_num_threads();
+    auto iter_ad_i_start = std::chrono::high_resolution_clock::now();
+    #pragma omp parallel for default(none) shared(ad_len, k_vec, local_i_vec, gap_penalty, scoring_function, omp_n_threads) private(ad_idx)
     for (ad_idx=0; ad_idx<ad_len; ++ad_idx) {
       index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
       auto west = raw_matrix(idx.first, idx.second - 1);
@@ -86,7 +93,13 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
       auto a = sequence_x[idx.first - 1];
       auto b = sequence_y[idx.second - 1];
       raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+      omp_n_threads = omp_get_num_threads();
     }
+    auto iter_ad_i_end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_i_end-iter_ad_i_start);
+    sm_iter_ad_i_times.resize(i);
+    sm_iter_ad_i_times(i-1) = (float) duration.count();
+
 #else
     for (Eigen::Index k = starting_k; k <= ending_k; ++k) {
       index_tuple idx(local_i, k);
@@ -100,6 +113,12 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     }
 #endif
   }
+  auto iter_ad_read_end = std::chrono::high_resolution_clock::now();
+  auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end-iter_ad_read_start);
+  sm_iter_ad_read_time = (float) read_duration.count();
+  std::cout<<"Similarity_Matrix::iterate omp_n_threads: "<<omp_n_threads<<std::endl;
+  std::cout<<"Similarity_Matrix::iterate omp_n_threads2: "<<omp_n_threads2<<std::endl;
+
 }
 
 const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {
@@ -189,6 +208,8 @@ void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, 
   auto nrows = raw_matrix.rows();
   auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;
+  int omp_n_threads = omp_get_num_threads();
+  std::cout<<"Similarity_Matrix_Skewed::iterate line 205 omp_n_threads: "<<omp_n_threads<<std::endl;
   //Phase 1: Upper triangular part
   for (Eigen::Index j = 2; j < nrows; j++) {
 #ifdef USEOMP

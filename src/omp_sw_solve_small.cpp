@@ -8,10 +8,56 @@
 #include "smithwaterman.h"
 #include <Eigen/Core>
 
+#include <set>
+#include <iterator>
+#include <algorithm>
+
 #ifdef USEOMP
 #include <cstdio>
 #include <omp.h>
 #endif
+
+class CSVWriter
+{
+	std::string fileName;
+	std::string delimeter;
+	int linesCount;
+ 
+public:
+	CSVWriter(std::string filename, std::string delm = ",") :
+			fileName(filename), delimeter(delm), linesCount(0)
+	{}
+	/*
+	 * Member function to store a range as comma seperated value
+	 */
+	template<typename T>
+	void addDatainRow(T first, T last);
+};
+ 
+/*
+ * This Function accepts a range and appends all the elements in the range
+ * to the last row, seperated by delimeter (Default is comma)
+ */
+template<typename T>
+void CSVWriter::addDatainRow(T first, T last)
+{
+	std::fstream file;
+	// Open the file in truncate mode if first line else in Append Mode
+	file.open(fileName, std::ios::out | (linesCount ? std::ios::app : std::ios::trunc));
+ 
+	// Iterate over the range and add each lement to file seperated by delimeter.
+	for (; first != last; )
+	{
+		file << *first;
+		if (++first != last)
+			file << delimeter;
+	}
+	file << "\n";
+	linesCount++;
+ 
+	// Close the file
+	file.close();
+}
 
 int main(int argc, char **argv) {
 #ifdef USEOMP
@@ -26,8 +72,10 @@ int main(int argc, char **argv) {
     for (int n = 0; n < 6; ++n) printf("Thread: %d, Num: %d\n", omp_get_thread_num(), n);
   } else if (argv1 == "solve_small") {
     const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
+//    const std::string fa_file_path = "data/genome.chr22.fa"; //fa contains reference
     const std::string input_file_path = "data/data_small_ground_truth.csv";
     const std::string output_file_path = "data/align_output.csv";
+    const std::string timing_file_path = "data/timings/timing_201911211811_ompfg1.csv";
 
     std::cout << "Hello sw_solve_small" << std::endl;
 
@@ -67,6 +115,7 @@ int main(int argc, char **argv) {
     i = 0;
 
     Eigen::VectorXf calculateScore_times = Eigen::VectorXf::Zero(arg_nreads);
+    Eigen::VectorXf read_sm_iterate_times = Eigen::VectorXf::Zero(arg_nreads);
     while (std::getline(align_input, input_line)) {
       std::cout << "*** i=" << i << " ***" << std::endl;
       if (i > arg_nreads) {
@@ -97,7 +146,6 @@ int main(int argc, char **argv) {
 #endif
         {
           auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2], fa_string);
-
           auto start = std::chrono::high_resolution_clock::now();
           score_tmp = la->calculateScore();
           auto end = std::chrono::high_resolution_clock::now();
@@ -107,7 +155,9 @@ int main(int argc, char **argv) {
           calculateScore_times(i - 1) = duration_val;
 
           pos_pred_tmp = la->getPos();
+
           std::cout<<"sw_iter_ad_read_times: "<<la->sw_iter_ad_read_time<<"us"<<std::endl;
+          read_sm_iterate_times(i-1) = la->sw_iter_ad_read_time;
 
 #ifdef VERBOSE
           std::cout << "OMP test stuff" << std::endl;
@@ -126,12 +176,39 @@ int main(int argc, char **argv) {
       i++;
     }
 
-    std::cout << "calculateScore_times (us): " << std::endl;
-    std::cout << calculateScore_times << std::endl;
-
     align_input.close();
     align_output.close();
     std::cout << "Done, output file see: " << output_file_path << std::endl;
+    
+    std::cout << "calculateScore_times (us): " << std::endl;
+    std::cout << calculateScore_times << std::endl;
+
+    std::cout << "sm_iterate_times (us): " << std::endl;
+    std::cout << read_sm_iterate_times << std::endl;
+
+    std::ifstream timing_file_exist(timing_file_path);
+    std::cout<<timing_file_exist.good()<<std::endl;
+    CSVWriter timing_writer(timing_file_path);
+    std::vector<std::string> header_tmp;
+    std::vector<float> row_tmp;
+    float arg_nreads_float = (float) arg_nreads;
+    float arg_nthreads_float = (float) arg_nthreads;
+    if (timing_file_exist.good() != 1){
+      header_tmp = {"n_reads","n_threads","time1","time2"};
+      timing_writer.addDatainRow(header_tmp.begin(),header_tmp.end());
+    }
+    row_tmp = {arg_nreads_float, arg_nthreads_float, calculateScore_times.mean(), read_sm_iterate_times.mean() };
+    timing_writer.addDatainRow(row_tmp.begin(),row_tmp.end());
+
+    /*
+    for (i=0; i<arg_nreads; i++){
+      row_tmp = {arg_nreads_float, arg_nthreads_float, calculateScore_times(i), read_sm_iterate_times(i) };
+      timing_writer.addDatainRow(row_tmp.begin(),row_tmp.end());
+    }
+    */
+    std::cout << "Done, timing file see: " << timing_file_path << std::endl;
+
+
   } else if (argv1 == "eigen1") {
     std::cout << "Hello omp eigen" << std::endl;
 

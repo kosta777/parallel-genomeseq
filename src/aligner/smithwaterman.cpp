@@ -78,7 +78,13 @@ void SWAligner<SMT>::traceback(index_tuple similarity_matrix_max) {
 
 template <class SMT>
 double SWAligner<SMT>::calculateScore() {
+#ifdef USEOMP
+  similarity_matrix.sm_nthreads = sw_nthreads;
+  similarity_matrix.sm_finegrain_type = sw_finegrain_type;
+#endif
+
   similarity_matrix.iterate(scoring_function, gap_penalty);
+
 #ifdef USEOMP
   sw_iter_ad_i_times = similarity_matrix.sm_iter_ad_i_times;
   sw_iter_ad_read_time = similarity_matrix.sm_iter_ad_read_time;

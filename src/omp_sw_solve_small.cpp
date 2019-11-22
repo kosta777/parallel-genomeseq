@@ -31,7 +31,7 @@ public:
 	 * Member function to store a range as comma seperated value
 	 */
 	template<typename T>
-	void addDatainRow(T first, T last);
+	void addDatainRow(T first, T last, int append);
 };
  
 /*
@@ -39,12 +39,14 @@ public:
  * to the last row, seperated by delimeter (Default is comma)
  */
 template<typename T>
-void CSVWriter::addDatainRow(T first, T last)
+void CSVWriter::addDatainRow(T first, T last, int append)
 {
 	std::fstream file;
 	// Open the file in truncate mode if first line else in Append Mode
-	file.open(fileName, std::ios::out | (linesCount ? std::ios::app : std::ios::trunc));
- 
+//	file.open(fileName, std::ios::out | (linesCount ? std::ios::app : std::ios::trunc));
+	file.open(fileName, std::ios::out | (append ? std::ios::app : std::ios::trunc));
+
+
 	// Iterate over the range and add each lement to file seperated by delimeter.
 	for (; first != last; )
 	{
@@ -61,11 +63,11 @@ void CSVWriter::addDatainRow(T first, T last)
 
 int main(int argc, char **argv) {
 #ifdef USEOMP
-  if (argc < 4) exit(-1);
+  if (argc < 5) exit(-1);
   std::string argv1 = argv[1];
   int arg_nreads = std::stoi(argv[2]);
   int arg_nthreads = std::stoi(argv[3]);
-
+  int arg_finegrain_type = std::stoi(argv[4]);
   if (argv1 == "0") {
     std::cout << "Hello omp" << std::endl;
 #pragma omp parallel for default(none) num_threads(3)
@@ -75,7 +77,7 @@ int main(int argc, char **argv) {
 //    const std::string fa_file_path = "data/genome.chr22.fa"; //fa contains reference
     const std::string input_file_path = "data/data_small_ground_truth.csv";
     const std::string output_file_path = "data/align_output.csv";
-    const std::string timing_file_path = "data/timings/timing_201911211811_ompfg1.csv";
+    const std::string timing_file_path = "data/timings/timing_201911212322_ompfg_multicompr.csv";
 
     std::cout << "Hello sw_solve_small" << std::endl;
 
@@ -146,6 +148,8 @@ int main(int argc, char **argv) {
 #endif
         {
           auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2], fa_string);
+	  la->sw_finegrain_type = arg_finegrain_type;
+	  la->sw_nthreads = arg_nthreads;
           auto start = std::chrono::high_resolution_clock::now();
           score_tmp = la->calculateScore();
           auto end = std::chrono::high_resolution_clock::now();
@@ -193,12 +197,16 @@ int main(int argc, char **argv) {
     std::vector<float> row_tmp;
     float arg_nreads_float = (float) arg_nreads;
     float arg_nthreads_float = (float) arg_nthreads;
+    float arg_finegrain_type_float = (float) arg_finegrain_type;
     if (timing_file_exist.good() != 1){
-      header_tmp = {"n_reads","n_threads","time1","time2"};
-      timing_writer.addDatainRow(header_tmp.begin(),header_tmp.end());
+//      header_tmp = {"n_reads","n_threads","time1","time2"};
+      header_tmp = {"n_reads","n_threads","finegrain_type","avg_t1","avg_t2"};
+      timing_writer.addDatainRow(header_tmp.begin(),header_tmp.end(),0);
     }
-    row_tmp = {arg_nreads_float, arg_nthreads_float, calculateScore_times.mean(), read_sm_iterate_times.mean() };
-    timing_writer.addDatainRow(row_tmp.begin(),row_tmp.end());
+//    row_tmp = {arg_nreads_float, arg_nthreads_float, 
+    row_tmp = {arg_nreads_float, arg_nthreads_float, arg_finegrain_type_float,
+	    calculateScore_times.mean(), read_sm_iterate_times.mean() };
+    timing_writer.addDatainRow(row_tmp.begin(),row_tmp.end(),1);
 
     /*
     for (i=0; i<arg_nreads; i++){
@@ -207,6 +215,9 @@ int main(int argc, char **argv) {
     }
     */
     std::cout << "Done, timing file see: " << timing_file_path << std::endl;
+
+    int a = 59/4;
+    std::cout<<"testing123: "<<a<<std::endl;
 
 
   } else if (argv1 == "eigen1") {

@@ -40,6 +40,8 @@ class Similarity_Matrix : public Abstract_Similarity_Matrix{
     const Eigen::MatrixXd &get_matrix() const override;
     double operator()(Eigen::Index row, Eigen::Index col) const override { return raw_matrix(row, col); };
 #ifdef USEOMP
+    int sm_nthreads;
+    int sm_finegrain_type;
     float sm_iter_ad_read_time;  //anti-diagonal
     Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
 #endif
@@ -65,6 +67,8 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
       return raw_matrix(ri, rj);
     };
 #ifdef USEOMP
+    int sm_nthreads;
+    int sm_finegrain_type;
     float sm_iter_ad_read_time;  //anti-diagonal
     Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
 #endif

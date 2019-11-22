@@ -73,11 +73,17 @@ int main(int argc, char **argv) {
 #pragma omp parallel for default(none) num_threads(3)
     for (int n = 0; n < 6; ++n) printf("Thread: %d, Num: %d\n", omp_get_thread_num(), n);
   } else if (argv1 == "solve_small") {
-    const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
+
+//    const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
 //    const std::string fa_file_path = "data/genome.chr22.fa"; //fa contains reference
-    const std::string input_file_path = "data/data_small_ground_truth.csv";
+    const std::string fa_file_path = "data/test_fa_custom1.fa"; //fa contains reference
+
+//    const std::string input_file_path = "data/data_small_ground_truth.csv";
+    const std::string input_file_path = "data/ground_truth_custom10k.csv";
     const std::string output_file_path = "data/align_output.csv";
-    const std::string timing_file_path = "data/timings/timing_201911212322_ompfg_multicompr.csv";
+    const std::string timing_file_path = "data/timings/timing_20191122_1327_ompfg_oxtest.csv";
+
+    int fa_file_has_header = 0;
 
     std::cout << "Hello sw_solve_small" << std::endl;
 
@@ -87,12 +93,13 @@ int main(int argc, char **argv) {
     std::string fa_line;
     int i = 0;
     while (std::getline(fa, fa_line)) {
-      if (i > 0) {
+      if (i+1 > fa_file_has_header) {
         fa_string += fa_line;
       }
       i++;
     }
     fa.close();
+    std::cout<<"omp_sw_solve_small line 99, i:  "<<i<<std::endl;
 
 #ifdef VERBOSE
     std::cout << "fa stuff: " << std::endl;

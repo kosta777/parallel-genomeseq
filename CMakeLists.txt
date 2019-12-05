@@ -78,6 +78,9 @@ target_link_libraries(sw_solve_small PRIVATE libaligner)
 add_executable(mpi_sw_solve_small src/mpi_sw_solve_small.cpp)
 target_link_libraries(mpi_sw_solve_small PRIVATE libaligner)
 
+add_executable(mpi_sw_solve_uniprot src/mpi_sw_solve_uniprot.cpp)
+target_link_libraries(mpi_sw_solve_uniprot PRIVATE libaligner)
+
 add_executable(omp_sw_solve_small src/omp_sw_solve_small.cpp)
 target_link_libraries(omp_sw_solve_small PRIVATE libaligner)
 target_link_libraries(omp_sw_solve_small PUBLIC Eigen)

@@ -140,6 +140,16 @@ python reader.py mpi_prepare_input
 cd ..
 mpiexec -np {node_num, ie. 6} ./bin/mpi_sw_solve_small
 
+#MPI Benchmark on UNIPROT
+cd build
+cmake -DUSEMPI=ON ..
+make
+#do the next part once to prepare input
+cd ../py
+python reader.py uniprot_prepare
+cd ..
+mpiexec -np {node_num, ie. 6} ./bin/mpi_sw_solve_uniprot
+
 #Coarse-grained OMP
 cd build
 cmake -DUSEOMP=ON ..

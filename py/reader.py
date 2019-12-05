@@ -4,6 +4,7 @@ import os
 from os.path import dirname, abspath, join as pjoin
 import sys
 import datetime
+import pickle
 
 cwd = dirname(abspath(__file__))
 project_dir = pjoin(cwd,"..")
@@ -47,6 +48,54 @@ def mpi_prepare(text_str):
     for i in range(1, len(text), 4):
         f.write(text[i]+'\n')
     f.close()
+
+def uniprot_prepare(file_path): 
+    token = '>sp'
+    chunks = []
+    current_chunk = []
+
+    for line in open("../data/uniprot/uniprot_sprot.fasta"):
+       if line.startswith(token) and current_chunk: 
+          # if line starts with token and the current chunk is not empty
+          chunks.append(current_chunk[:]) #  add not empty chunk to chunks
+          current_chunk = [] #  make current chunk blank
+       # just append a line to the current chunk on each iteration
+       current_chunk.append(line)
+
+    chunks.append(current_chunk)  #  append the last chunk outside the loop
+    i=0
+    for chunk in chunks:
+        with open("../data/uniprot/"+str(i)+".fasta", 'w') as f:
+            for el in chunk:
+                f.write("%s" % el)
+        i=i+1
+    with open("../data/uniprot/stats.txt", 'w+') as f:
+        f.write("%d" % i)
+
+def uniprot_prepare_single(file_path): 
+    token = '>sp'
+    chunks = []
+    current_chunk = ""
+
+    for line in open("../data/uniprot/uniprot_sprot.fasta"):
+       if line.startswith(token) and current_chunk != "": 
+          # if line starts with token and the current chunk is not empty
+          chunks.append(current_chunk[:]) #  add not empty chunk to chunks
+          current_chunk = "" #  make current chunk blank
+       # just append a line to the current chunk on each iteration
+       if not line.startswith(token):
+          current_chunk = current_chunk + line[:-1]
+
+    chunks.append(current_chunk)  #  append the last chunk outside the loop
+    i=0
+    with open("../data/uniprot/database.fasta", 'a+') as f:
+        for chunk in chunks:
+            f.write("%s\n" % chunk)
+        i=i+1
+    with open("../data/uniprot/stats.txt", 'w+') as f:
+        f.write("%d" % i)
+
+ 
 
 def single_fq_2_np(open_file_path):
     f = open(open_file_path,"r")
@@ -223,6 +272,8 @@ if __name__ == '__main__':
 
     elif sys.argv[1] == 'mpi_prepare_input':
         mpi_prepare(general_readtxt("../data/data_small/output_tiny_30xCov1.fq"))
+    elif sys.argv[1] == 'uniprot_prepare':
+        uniprot_prepare("")
 
 
 ###############

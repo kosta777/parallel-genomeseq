@@ -1,9 +1,67 @@
 import pandas as pd
 import sys
+import os
+from os.path import dirname, abspath, join as pjoin
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+
+cwd = dirname(abspath(__file__))
+project_dir = pjoin(cwd,"..")
+
+timing1_path = pjoin(project_dir,"data/timings/timing_20191122_1650_ompfg_oxtest.csv")
 
 if __name__ == '__main__':
     if sys.argv[1] == "hello":
         print("hello")
+
+    elif sys.argv[1] == "timing1":
+
+        def poly_fit(x,w0,w1,w2):
+            return(w0+w1*x+w2*(x**2))
+
+        df = pd.read_csv(timing1_path)
+        df_colnames = list(df.keys())
+#        t1_key = df_colnames[3]
+        t2_key = df_colnames[4]
+
+#        x_data = np.log10(df['n_threads'].values)
+        x_data = df['n_threads'].values
+
+#        t1 = (df[t1_key].values)/(1E6)
+#        t2 = (df[t2_key].values)/(1E6)
+#        t1 = (df[t1_key].values)/( (df[df['n_threads']==1][t1_key]).mean())
+        t2 = (df[t2_key].values)/( (df[df['n_threads']==1][t2_key]).mean())
+
+        w_opt,w_cov = curve_fit(poly_fit,np.log10(x_data),t2)
+        x_fit = np.linspace(np.log10(np.min(x_data)),np.log10(np.max(x_data)),1000)
+        x_fit_plot = 10**x_fit
+        t_fit = poly_fit(x_fit,*w_opt)
+
+        f1 = plt.figure()
+#        ax1 = f1.add_subplot(111)
+        ax1 = f1.add_subplot(111,xscale="log")
+
+#        ax1.scatter(x_data,t1,s=10.0)
+        ax1.scatter(x_data,t2,s=10.0)
+
+        ax1.plot(x_fit_plot,t_fit,linewidth=1.0,color="red")
+
+        ax1.minorticks_on()
+        ax1.grid(which='major',linestyle='-',linewidth=0.5)
+        ax1.grid(which='minor',linestyle=':',linewidth=0.5)
+
+        ax1.set_title("OMP parallelization of anti-diagonal DP matrix construction (fine grain)")
+        ax1.set_xlabel(r"$N_{threads}$")
+        ax1.set_xticks(2**(np.arange(0,7)))
+        ax1.set_xticklabels(2**(np.arange(0,7)))
+        ax1.set_ylabel("Normalized Construction Time") #10k* 30k D
+
+        plt.show()
+
+
+
+
 
     elif sys.argv[1] == "sw_solve_small":
         if len(sys.argv)<3:

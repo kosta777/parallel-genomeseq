@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 //    const std::string input_file_path = "data/data_small_ground_truth.csv";
     const std::string input_file_path = "data/ground_truth_custom10k.csv";
     const std::string output_file_path = "data/align_output.csv";
-    const std::string timing_file_path = "data/timings/timing_20191122_1327_ompfg_oxtest.csv";
+    const std::string timing_file_path = "data/timings/timing_20191122_1650_ompfg_oxtest.csv";
 
     int fa_file_has_header = 0;
 
@@ -121,10 +121,12 @@ int main(int argc, char **argv) {
 
     double score_tmp;
     Eigen::Index pos_pred_tmp;
+    Eigen::VectorXf SM_timings_tmp;
     i = 0;
 
     Eigen::VectorXf calculateScore_times = Eigen::VectorXf::Zero(arg_nreads);
     Eigen::VectorXf read_sm_iterate_times = Eigen::VectorXf::Zero(arg_nreads);
+    Eigen::VectorXf adsum_sm_iterate_times = Eigen::VectorXf::Zero(arg_nreads);
     while (std::getline(align_input, input_line)) {
       std::cout << "*** i=" << i << " ***" << std::endl;
       if (i > arg_nreads) {
@@ -167,8 +169,13 @@ int main(int argc, char **argv) {
 
           pos_pred_tmp = la->getPos();
 
-          std::cout<<"sw_iter_ad_read_times: "<<la->sw_iter_ad_read_time<<"us"<<std::endl;
-          read_sm_iterate_times(i-1) = la->sw_iter_ad_read_time;
+	  SM_timings_tmp = la->getTimings();
+          std::cout<<"sw_iter_ad_read_times: "<<SM_timings_tmp(0)<<"us"<<std::endl;
+          read_sm_iterate_times(i-1) = SM_timings_tmp(0);
+
+          std::cout<<"sw_iter_ad_i_times_sum: "<<SM_timings_tmp(1)<<"us"<<std::endl;
+          adsum_sm_iterate_times(i-1) = SM_timings_tmp(1);
+
 
 #ifdef VERBOSE
           std::cout << "OMP test stuff" << std::endl;
@@ -197,6 +204,10 @@ int main(int argc, char **argv) {
     std::cout << "sm_iterate_times (us): " << std::endl;
     std::cout << read_sm_iterate_times << std::endl;
 
+    std::cout << "adsum sm_iterate_times (us): " << std::endl;
+    std::cout << adsum_sm_iterate_times << std::endl;
+
+
     std::ifstream timing_file_exist(timing_file_path);
     std::cout<<timing_file_exist.good()<<std::endl;
     CSVWriter timing_writer(timing_file_path);
@@ -207,12 +218,12 @@ int main(int argc, char **argv) {
     float arg_finegrain_type_float = (float) arg_finegrain_type;
     if (timing_file_exist.good() != 1){
 //      header_tmp = {"n_reads","n_threads","time1","time2"};
-      header_tmp = {"n_reads","n_threads","finegrain_type","avg_t1","avg_t2"};
+      header_tmp = {"n_reads","n_threads","finegrain_type","avg_t_calcscore","avg_t_adread","avg_t_adisum"};
       timing_writer.addDatainRow(header_tmp.begin(),header_tmp.end(),0);
     }
 //    row_tmp = {arg_nreads_float, arg_nthreads_float, 
     row_tmp = {arg_nreads_float, arg_nthreads_float, arg_finegrain_type_float,
-	    calculateScore_times.mean(), read_sm_iterate_times.mean() };
+	    calculateScore_times.mean(), read_sm_iterate_times.mean(), adsum_sm_iterate_times.mean()};
     timing_writer.addDatainRow(row_tmp.begin(),row_tmp.end(),1);
 
     /*

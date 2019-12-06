@@ -32,6 +32,7 @@ OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view firs
     consensus_y(),
     sequence_x(first_sequence),
     sequence_y(second_sequence),
+    sm_timings(),
     scoring_function(std::move(scoring_function)) {
   consensus_x.reserve(sequence_x.size());
   consensus_y.reserve(sequence_x.size());
@@ -87,6 +88,7 @@ double OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
     auto la = std::make_unique<LAT>(sequence_x, sequence_y_i);
     la -> calculateScore();
     pos = la -> getPos() + left;
+    sm_timings = la -> getTimings();
     consensus_x = la -> getConsensus_x();
     consensus_y = la -> getConsensus_y();
   }

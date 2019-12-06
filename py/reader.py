@@ -211,7 +211,7 @@ if __name__ == '__main__':
 
 
 
-    elif sys.argv[1] == 'create_lsv_reads_from_sam':
+    elif sys.argv[1] == 'create_lsv_reads_from_sam':  #lsv="line separated values"
         sam_raw = general_readtxt(small_sam)
         sam1 = SAM(sam_raw)
         print(sam1.df)

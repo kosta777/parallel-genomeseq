@@ -22,6 +22,13 @@ std::tuple<Eigen::Index, Eigen::Index, double> Similarity_Matrix::find_index_of_
   return {x, y, max};
 }
 
+Eigen::VectorXf Similarity_Matrix::getTimings() const {
+  Eigen::VectorXf sm_timings_tmp = Eigen::VectorXf::Zero(2);
+  sm_timings_tmp(0) = sm_iter_ad_read_time;
+  sm_timings_tmp(1) = sm_iter_ad_i_times.sum();
+  return sm_timings_tmp;
+}
+
 void Similarity_Matrix::print_matrix() const {
   std::cout << raw_matrix << std::endl;
 }
@@ -197,7 +204,6 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
         raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = ad_vec_tmp(ad_idx);
       }
     }
-
     auto iter_ad_i_end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_i_end-iter_ad_i_start);
     sm_iter_ad_i_times.resize(i);
@@ -255,6 +261,13 @@ void Similarity_Matrix_Skewed::print_matrix() const {
     }
   }
   std::cout << similarity_matrix << std::endl;
+}
+
+Eigen::VectorXf Similarity_Matrix_Skewed::getTimings() const {
+  Eigen::VectorXf sm_timings_tmp = Eigen::VectorXf::Zero(2);
+  sm_timings_tmp(0) = sm_iter_ad_read_time;
+  sm_timings_tmp(1) = sm_iter_ad_i_times.sum();
+  return sm_timings_tmp;
 }
 
 #ifdef USEOMP

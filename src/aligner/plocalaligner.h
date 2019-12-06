@@ -12,9 +12,11 @@ class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Ty
     double calculateScore() override;
     double getScore() const override { return max_score; };
     unsigned int getPos() const override { return pos; };
-    std::string_view getConsensus_x() const override { return consensus_x; }
-    std::string_view getConsensus_y() const override { return consensus_y; }
+    std::string_view getConsensus_x() const override { return consensus_x; };
+    std::string_view getConsensus_y() const override { return consensus_y; };
+    Eigen::VectorXf getTimings() const override { return sm_timings; };
   private:
+    Eigen::VectorXf sm_timings;
     unsigned int pos;
     double max_score;
     double gap_penalty;

@@ -6,12 +6,13 @@ import sys
 import datetime
 
 cwd = dirname(abspath(__file__))
+project_dir = pjoin(cwd,"..")
 
 small_fa = pjoin(cwd,"data_small/genome.chr22.5K.fa") #reference genome
 small_sam = pjoin(cwd,"../data/data_small/output_tiny_30xCov.mod.sam") #sam result
 small_fq_list = [pjoin(cwd,"data_small/output_tiny_30xCov1.fq"), pjoin(cwd,"data_small/output_tiny_30xCov2.fq")] #reads
 
-long_fa = pjoin(cwd,"data/genome.chr22.fa") #reference genome
+long_fa = pjoin(project_dir,"data/genome.chr22.fa") #reference genome
 long_fq_list_5 = [pjoin(cwd,"data/output_5xCov1.fq"), pjoin(cwd,"data/output_5xCov2.fq")] #reads
 long_fq_list_10 = [pjoin(cwd,"data/output_10xCov1.fq"), pjoin(cwd,"data/output_10xCov2.fq")] #reads
 long_fq_list_30 = [pjoin(cwd,"data/output_30xCov1.fq"), pjoin(cwd,"data/output_30xCov2.fq")] #reads
@@ -87,7 +88,111 @@ if __name__ == '__main__':
         sam1 = SAM(sam_raw)
         print(sam1.df)
 
-    elif sys.argv[1] == 'gen_input':
+    elif sys.argv[1] == 'create_single_string_fa':
+        parsed_fa_string = read_fa(small_fa)
+        new_fa_file = open("data/test_fa.fa","w")
+#        new_fa_file = open("data/test_fa.fa","a")
+        new_fa_file.write(parsed_fa_string)
+        new_fa_file.close()
+
+    elif sys.argv[1] == 'create_single_string_fa_long':
+        open("data/test_fa_long.fa", "w").close()
+        new_fa_file = open("data/test_fa_long.fa","a")
+
+        i=0
+#        with open(small_fa,"r") as original_fa:
+        with open(long_fa,"r") as original_fa:
+            for fa_line in original_fa:
+                if i>0:
+                    new_fa_file.write(fa_line.split("\n")[0])
+                    if i%1000==0 or i<10:
+                        print("i=%d: "%(i)+fa_line.split("\n")[0])
+    #                    print(fa_line.split("\n")[1:-1])
+                i+=1
+        new_fa_file.close()
+
+
+    elif sys.argv[1] == 'gen_ref_custom':
+        custom_ref_len = 30 * 1000
+        test_start_pos = 300000 * 60
+        alphabet = ['A','C','G','T','N']
+
+        open("data/test_fa_custom1.fa", "w").close()
+        new_fa_file = open("data/test_fa_custom1.fa","a")
+        line_idx=0
+        nt_idx = 0
+
+        custom_ref_str = ""
+
+        with open(long_fa,"r") as original_fa:
+            for fa_line in original_fa:
+                nts_in_line = 0
+                if line_idx>0:
+                    line_str=fa_line.split("\n")[0]
+                    nts_in_line = len(line_str)
+                    if nt_idx >= test_start_pos and nt_idx < test_start_pos+custom_ref_len:
+                        custom_ref_str+=line_str
+                        new_fa_file.write(line_str)
+                    if line_idx%1000==0 or line_idx<10:
+                        print("line_idx=%d: "%(line_idx)+line_str)
+    #                    print(fa_line.split("\n")[1:-1])
+                line_idx+=1
+                nt_idx += nts_in_line
+        new_fa_file.close()
+
+        print("results: ")
+        for c in alphabet:
+            print("%s:%d"%(c,custom_ref_str.count(c)))
+
+
+    elif sys.argv[1] == 'gen_input_custom':
+        import random
+
+        custom_read_len = 10000
+        n_reads_to_gen = 100
+
+        f = open(  pjoin(project_dir,"data/test_fa_custom1.fa"),"r")
+        custom_ref = f.read()
+        f.close()
+
+        print(custom_ref)
+        print(len(custom_ref))
+        custom_ref_len = len(custom_ref)
+
+        gt_df = pd.DataFrame({
+            "QNAME":[],
+            "SEQ":[],
+            "POS":[],
+            })
+
+
+        for i in range(n_reads_to_gen):
+            start_idx = int(random.random() * (custom_ref_len-custom_read_len))
+            gt_df = gt_df.append(
+                        pd.DataFrame({
+                        "QNAME":["custom_read_%d"%(i)],
+                        "SEQ":[custom_ref[start_idx:start_idx+custom_read_len]],
+                        "POS":[str(start_idx)],
+                        })
+                    )
+
+        gt_df = gt_df[["QNAME","SEQ","POS"]]
+        gt_df = gt_df.reset_index(drop=True)
+        gt_df.index.name = "index"
+        print(gt_df.head())
+        print(gt_df.keys())
+#        gt_df = gt_df.reset_index()
+        open(pjoin(project_dir,"data/ground_truth_custom10k.csv"),"w").close()
+        gt_df.to_csv( pjoin(project_dir, "data/ground_truth_custom10k.csv"))
+
+        open(pjoin(project_dir,"data/ground_truth_custom10k_readsonly.txt"),"w").close()
+        reads_only_file = open( pjoin(project_dir,"data/ground_truth_custom10k_readsonly.txt"),"a")
+        for i in range(gt_df.shape[0]):
+            reads_only_file.write(gt_df.iloc[i]['SEQ']+'\n')
+        reads_only_file.close()
+
+
+    elif sys.argv[1] == 'gen_input_125':
         sam_raw = general_readtxt(small_sam)
         sam1 = SAM(sam_raw)
 
@@ -101,8 +206,28 @@ if __name__ == '__main__':
 
         gt_df.to_csv("../data/ground_truth.csv")
 
+    elif sys.argv[1] == 'read_fa':
+        fa = read_fa(small_fa)
+
+
+
+    elif sys.argv[1] == 'create_lsv_reads_from_sam':  #lsv="line separated values"
+        sam_raw = general_readtxt(small_sam)
+        sam1 = SAM(sam_raw)
+        print(sam1.df)
+
+        new_reads_file = open("data/test_reads.txt","a")
+        for i in range(sam1.df.shape[0]):
+            new_reads_file.write(sam1.df.iloc[i]['SEQ']+'\n')
+        new_reads_file.close()
+
     elif sys.argv[1] == 'mpi_prepare_input':
         mpi_prepare(general_readtxt("../data/data_small/output_tiny_30xCov1.fq"))
+
+
+###############
+
+
 
     elif sys.argv[1] == 'data_test':
         print('starting seqdata_test')

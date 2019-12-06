@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <Eigen/Dense>
+#include <chrono>
 
 #ifdef USEOMP
 #include <omp.h>
@@ -19,6 +20,13 @@ std::tuple<Eigen::Index, Eigen::Index, double> Similarity_Matrix::find_index_of_
   std::cout << "Maximum is " << max << " @ (" << x << ", " << y << ")" << std::endl;
 #endif
   return {x, y, max};
+}
+
+Eigen::VectorXf Similarity_Matrix::getTimings() const {
+  Eigen::VectorXf sm_timings_tmp = Eigen::VectorXf::Zero(2);
+  sm_timings_tmp(0) = sm_iter_ad_read_time;
+  sm_timings_tmp(1) = sm_iter_ad_i_times.sum();
+  return sm_timings_tmp;
 }
 
 void Similarity_Matrix::print_matrix() const {
@@ -59,7 +67,9 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
   const unsigned int dim_x = raw_matrix.rows();
   const unsigned int dim_y = raw_matrix.cols();
 
-  for (Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i) {
+  int omp_n_threads2;
+  auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
+  for (Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i){
     Eigen::Index local_i = i;
     Eigen::Index starting_k = 1;
     Eigen::Index ending_k = i;
@@ -73,20 +83,132 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     }
 
 #ifdef USEOMP
-    auto ad_len = ending_k-starting_k+1; //anti diagonal length
-    Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
-    Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
-    Eigen::Index ad_idx;
-    #pragma omp parallel for default(none) shared(ad_len, k_vec, local_i_vec, gap_penalty, scoring_function) private(ad_idx)
-    for (ad_idx=0; ad_idx<ad_len; ++ad_idx) {
-      index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
-      auto west = raw_matrix(idx.first, idx.second - 1);
-      auto north = raw_matrix(idx.first - 1, idx.second);
-      auto north_west = raw_matrix(idx.first - 1, idx.second - 1);
-      auto a = sequence_x[idx.first - 1];
-      auto b = sequence_y[idx.second - 1];
-      raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+    omp_n_threads2 = omp_get_num_threads();
+    auto iter_ad_i_start = std::chrono::high_resolution_clock::now();
+    if (sm_finegrain_type==0){   //finegrain type 0: first attempt
+      auto ad_len = ending_k-starting_k+1; //anti diagonal length
+      Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
+      Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
+      Eigen::Index ad_idx;
+      #pragma omp parallel for default(none) shared(ad_len, k_vec, local_i_vec, gap_penalty, scoring_function) private(ad_idx)
+      for (ad_idx=0; ad_idx<ad_len; ++ad_idx) {
+        index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
+        auto west = raw_matrix(idx.first, idx.second - 1);
+        auto north = raw_matrix(idx.first - 1, idx.second);
+        auto north_west = raw_matrix(idx.first - 1, idx.second - 1);
+        auto a = sequence_x[idx.first - 1];
+        auto b = sequence_y[idx.second - 1];
+        raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+//        omp_n_threads = omp_get_num_threads();
+      }
     }
+    else if (sm_finegrain_type==1){   //finegrain type 1: create chunks manually
+      auto ad_len = ending_k-starting_k+1; //anti diagonal length
+      Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
+      Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
+
+      auto chunk_len = ad_len/sm_nthreads; //length per chunk, nchunks=nthreads
+      Eigen::VectorXd chunk_start_vec = Eigen::VectorXd::LinSpaced(sm_nthreads, 0, (sm_nthreads-1)*chunk_len);
+      Eigen::VectorXd chunk_end_vec = Eigen::VectorXd::LinSpaced(sm_nthreads, chunk_len, sm_nthreads*chunk_len);
+      chunk_end_vec(sm_nthreads-1) = ad_len;
+      
+      #pragma omp parallel for default(none) shared(ad_len, k_vec, local_i_vec, gap_penalty, scoring_function, chunk_start_vec, chunk_end_vec)
+      for (Eigen::Index chunk_idx=0; chunk_idx<sm_nthreads; chunk_idx++){
+        for (Eigen::Index ad_idx=chunk_start_vec(chunk_idx); ad_idx<chunk_end_vec(chunk_idx); ++ad_idx) {
+          index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
+          auto west = raw_matrix(idx.first, idx.second - 1);
+          auto north = raw_matrix(idx.first - 1, idx.second);
+          auto north_west = raw_matrix(idx.first - 1, idx.second - 1);
+          auto a = sequence_x[idx.first - 1];
+          auto b = sequence_y[idx.second - 1];
+          raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+//          omp_n_threads = omp_get_num_threads();
+        }
+      }
+    }
+    else if (sm_finegrain_type==2){   //finegrain type 2: schedule static
+      auto ad_len = ending_k-starting_k+1; //anti diagonal length
+      Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
+      Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
+      Eigen::Index ad_idx;
+      #pragma omp parallel for default(none) schedule(static) shared(ad_len, k_vec, local_i_vec, gap_penalty, scoring_function) private(ad_idx)
+      for (ad_idx=0; ad_idx<ad_len; ++ad_idx) {
+        index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
+        auto west = raw_matrix(idx.first, idx.second - 1);
+        auto north = raw_matrix(idx.first - 1, idx.second);
+        auto north_west = raw_matrix(idx.first - 1, idx.second - 1);
+        auto a = sequence_x[idx.first - 1];
+        auto b = sequence_y[idx.second - 1];
+        raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+//        omp_n_threads = omp_get_num_threads();
+      }
+    }
+    else if (sm_finegrain_type==3){   //finegrain type 1: create chunks manually, but with scheule static, with array
+      int L1_cachesize = 64;
+      auto ad_len = ending_k-starting_k+1; //anti diagonal length
+      auto ad_len_padded = (ad_len/L1_cachesize+1)*L1_cachesize;
+      std::cout<<"ad_len_padded: "<<ad_len_padded<<std::endl;
+      Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
+      Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
+
+      auto chunk_len = ad_len/sm_nthreads; //length per chunk, nchunks=nthreads
+      Eigen::VectorXd chunk_start_vec = Eigen::VectorXd::LinSpaced(sm_nthreads, 0, (sm_nthreads-1)*chunk_len);
+      Eigen::VectorXd chunk_end_vec = Eigen::VectorXd::LinSpaced(sm_nthreads, chunk_len, sm_nthreads*chunk_len);
+      chunk_end_vec(sm_nthreads-1) = ad_len;
+
+      Eigen::VectorXd ad_vec_tmp = Eigen::VectorXd::Zero(ad_len);
+
+      #pragma omp parallel for default(none) schedule(static) shared(ad_vec_tmp, ad_len, k_vec, local_i_vec, gap_penalty, scoring_function, chunk_start_vec, chunk_end_vec)
+      for (Eigen::Index chunk_idx=0; chunk_idx<sm_nthreads; chunk_idx++){
+        for (Eigen::Index ad_idx=chunk_start_vec(chunk_idx); ad_idx<chunk_end_vec(chunk_idx); ++ad_idx) {
+          index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
+          auto west = raw_matrix(idx.first, idx.second - 1);
+          auto north = raw_matrix(idx.first - 1, idx.second);
+          auto north_west = raw_matrix(idx.first - 1, idx.second - 1);
+          auto a = sequence_x[idx.first - 1];
+          auto b = sequence_y[idx.second - 1];
+          ad_vec_tmp(ad_idx) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+        }
+      }
+      for (Eigen::Index ad_idx=0; ad_idx<ad_len; ad_idx++){
+        raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = ad_vec_tmp(ad_idx);
+//      omp_n_threads = omp_get_num_threads();
+      }
+    }
+    else if (sm_finegrain_type==4){   //finegrain type 1: create chunks manually, but with scheule static, with array
+      int L1_cachesize = 64;   //getconf LEVEL1_DCACHE_LINESIZE
+      //#define CACHE_LINE_SIZE sysconf(_SC_LEVEL1_DCACHE_LINESIZE) 
+      auto ad_len = ending_k-starting_k+1; //anti diagonal length
+      auto ad_len_padded = (ad_len/(L1_cachesize*sm_nthreads)+1)*L1_cachesize*sm_nthreads;
+      if (i%1000==0){
+        std::cout<<"ad_len_padded: "<<ad_len_padded<<std::endl;
+      }
+      Eigen::VectorXd k_vec = Eigen::VectorXd::LinSpaced(ad_len,starting_k,ending_k);
+      Eigen::VectorXd local_i_vec = Eigen::VectorXd::LinSpaced(ad_len,local_i,local_i-ad_len+1);
+
+      Eigen::VectorXd ad_vec_tmp = Eigen::VectorXd::Zero(ad_len_padded);
+
+      #pragma omp parallel for default(none) schedule(static,ad_len_padded/sm_nthreads) shared(ad_vec_tmp, ad_len, ad_len_padded,k_vec, local_i_vec, gap_penalty, scoring_function)
+      for (Eigen::Index ad_idx=0; ad_idx<ad_len_padded; ++ad_idx) {
+	if (ad_idx<ad_len){
+          index_tuple idx(local_i_vec(ad_idx), k_vec(ad_idx));
+          auto west = raw_matrix(idx.first, idx.second - 1);
+          auto north = raw_matrix(idx.first - 1, idx.second);
+          auto north_west = raw_matrix(idx.first - 1, idx.second - 1);
+          auto a = sequence_x[idx.first - 1];
+          auto b = sequence_y[idx.second - 1];
+          ad_vec_tmp(ad_idx) = dp_func(north, west, north_west, scoring_function(a, b), gap_penalty);
+	}
+      }
+      for (Eigen::Index ad_idx=0; ad_idx<ad_len; ad_idx++){
+        raw_matrix( local_i_vec(ad_idx), k_vec(ad_idx) ) = ad_vec_tmp(ad_idx);
+      }
+    }
+    auto iter_ad_i_end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_i_end-iter_ad_i_start);
+    sm_iter_ad_i_times.resize(i);
+    sm_iter_ad_i_times(i-1) = (float) duration.count();
+
 #else
     for (Eigen::Index k = starting_k; k <= ending_k; ++k) {
       index_tuple idx(local_i, k);
@@ -100,6 +222,11 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     }
 #endif
   }
+  auto iter_ad_read_end = std::chrono::high_resolution_clock::now();
+  auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end-iter_ad_read_start);
+  sm_iter_ad_read_time = (float) read_duration.count();
+//  std::cout<<"Similarity_Matrix::iterate omp_n_threads: "<<omp_n_threads<<std::endl;
+  std::cout<<"Similarity_Matrix::iterate omp_n_threads2: "<<omp_n_threads2<<std::endl;
 }
 
 const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {
@@ -134,6 +261,13 @@ void Similarity_Matrix_Skewed::print_matrix() const {
     }
   }
   std::cout << similarity_matrix << std::endl;
+}
+
+Eigen::VectorXf Similarity_Matrix_Skewed::getTimings() const {
+  Eigen::VectorXf sm_timings_tmp = Eigen::VectorXf::Zero(2);
+  sm_timings_tmp(0) = sm_iter_ad_read_time;
+  sm_timings_tmp(1) = sm_iter_ad_i_times.sum();
+  return sm_timings_tmp;
 }
 
 #ifdef USEOMP
@@ -189,6 +323,8 @@ void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, 
   auto nrows = raw_matrix.rows();
   auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;
+  int omp_n_threads = omp_get_num_threads();
+  std::cout<<"Similarity_Matrix_Skewed::iterate line 205 omp_n_threads: "<<omp_n_threads<<std::endl;
   //Phase 1: Upper triangular part
   for (Eigen::Index j = 2; j < nrows; j++) {
 #ifdef USEOMP

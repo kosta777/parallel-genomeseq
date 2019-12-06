@@ -30,6 +30,7 @@ SWAligner<SMT>::SWAligner(std::string_view first_sequence,
     sequence_y(second_sequence),
     consensus_x(),
     consensus_y(),
+    sm_timings(),
     similarity_matrix(first_sequence, second_sequence),
     scoring_function(std::move(scoring_function)) {
   consensus_x.reserve(sequence_x.size());
@@ -78,7 +79,18 @@ void SWAligner<SMT>::traceback(index_tuple similarity_matrix_max) {
 
 template <class SMT>
 double SWAligner<SMT>::calculateScore() {
+#ifdef USEOMP
+  similarity_matrix.sm_nthreads = sw_nthreads;
+  similarity_matrix.sm_finegrain_type = sw_finegrain_type;
+#endif
+
   similarity_matrix.iterate(scoring_function, gap_penalty);
+  sm_timings = similarity_matrix.getTimings();
+
+#ifdef USEOMP
+//  sw_iter_ad_i_times_sum = (similarity_matrix.sm_iter_ad_i_times).sum();
+//  sw_iter_ad_read_time = similarity_matrix.sm_iter_ad_read_time;
+#endif
   auto [index_x, index_y, max] = similarity_matrix.find_index_of_maximum();
   max_score = max;
   traceback(index_tuple(index_x, index_y));

@@ -23,6 +23,7 @@ template<class SMT, class LAT>
 OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view first_sequence, std::string_view second_sequence, int npiece, double overlap_ratio,
                                                       std::function<double(const char &, const char &)> &&scoring_function,
                                                       double gap_penalty) :
+    sm_timings(),
     pos(0),
     max_score(-1),
     gap_penalty(gap_penalty),
@@ -32,7 +33,6 @@ OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view firs
     consensus_y(),
     sequence_x(first_sequence),
     sequence_y(second_sequence),
-    sm_timings(),
     scoring_function(std::move(scoring_function)) {
   consensus_x.reserve(sequence_x.size());
   consensus_y.reserve(sequence_x.size());

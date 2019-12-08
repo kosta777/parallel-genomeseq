@@ -234,9 +234,11 @@ const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {
 }
 
 Similarity_Matrix_Skewed::Similarity_Matrix_Skewed(std::string_view sequence_x, std::string_view sequence_y)
-    : sequence_x(sequence_x), sequence_y(sequence_y) {
-  len_x = sequence_x.size() + 1;
-  len_y = sequence_y.size() + 1;
+    : sequence_x(sequence_y), sequence_y(sequence_x), sm_iter_ad_read_time(-1.0), sm_iter_ad_i_times(){//SWITCHING SEQX AND SEQY
+  len_x = sequence_y.size() + 1;//SWITCHING SEQX AND SEQY
+  len_y = sequence_x.size() + 1;//SWITCHING SEQX AND SEQY
+  inv_sequence_y.reserve(len_y);
+  std::reverse_copy(sequence_x.begin(), sequence_x.end(), inv_sequence_y.begin());//SWITCHING SEQX AND SEQY
   raw_matrix = Eigen::MatrixXd(std::min(len_x,len_y), std::max(len_x,len_y)); 
   raw_matrix.setZero();
 }
@@ -248,7 +250,7 @@ std::tuple<Eigen::Index, Eigen::Index, double> Similarity_Matrix_Skewed::find_in
 #ifdef VERBOSE
   std::cout << "Maximum is " << max << " @( " << maxidx.first << "," << maxidx.second << ")" << std::endl;
 #endif
-  return {x, y, max};
+  return {y, x, max}; //SWITCHING SEQX AND SEQY
 }
 
 void Similarity_Matrix_Skewed::print_matrix() const {

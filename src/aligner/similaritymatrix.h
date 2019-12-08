@@ -67,7 +67,7 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
     index_tuple rawindex2trueindex(index_tuple raw_index) const;
     index_tuple trueindex2rawindex(index_tuple true_index) const;
     double operator()(Eigen::Index row, Eigen::Index col) const override {
-      auto [ri, rj] = trueindex2rawindex(index_tuple(row, col));
+      auto [ri, rj] = trueindex2rawindex(index_tuple(col, row));//SWITCHING SEQX AND SEQY
       return raw_matrix(ri, rj);
     };
 #ifdef USEOMP
@@ -82,6 +82,7 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
     Eigen::Index len_y;
     std::string_view sequence_x;
     std::string_view sequence_y;
+    std::string inv_sequence_y;
     float sm_iter_ad_read_time;  //anti-diagonal
     Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
 

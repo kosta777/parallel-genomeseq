@@ -23,6 +23,7 @@ template <class SMT>
 SWAligner<SMT>::SWAligner(std::string_view first_sequence,
                      std::string_view second_sequence,
                      std::function<double(const char &, const char &)> &&scoring_function, double gap_penalty) :
+    sm_timings(2),
     pos(0),
     max_score(-1),
     gap_penalty(gap_penalty),
@@ -30,7 +31,6 @@ SWAligner<SMT>::SWAligner(std::string_view first_sequence,
     sequence_y(second_sequence),
     consensus_x(),
     consensus_y(),
-    sm_timings(),
     similarity_matrix(first_sequence, second_sequence),
     scoring_function(std::move(scoring_function)) {
   consensus_x.reserve(sequence_x.size());

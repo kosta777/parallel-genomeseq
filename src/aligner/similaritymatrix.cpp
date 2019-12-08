@@ -237,8 +237,9 @@ Similarity_Matrix_Skewed::Similarity_Matrix_Skewed(std::string_view sequence_x, 
     : sequence_x(sequence_y), sequence_y(sequence_x), sm_iter_ad_read_time(-1.0), sm_iter_ad_i_times(){//SWITCHING SEQX AND SEQY
   len_x = sequence_y.size() + 1;//SWITCHING SEQX AND SEQY
   len_y = sequence_x.size() + 1;//SWITCHING SEQX AND SEQY
-  inv_sequence_y.reserve(len_y);
-  std::reverse_copy(sequence_x.begin(), sequence_x.end(), inv_sequence_y.begin());//SWITCHING SEQX AND SEQY
+  //inv_sequence_y.reserve(len_y - 1);
+  inv_sequence_y = std::string(sequence_x.rbegin(),sequence_x.rend());
+  //std::reverse_copy(sequence_x.begin(), sequence_x.end(), inv_sequence_y.begin());//SWITCHING SEQX AND SEQY
   raw_matrix = Eigen::MatrixXd(std::min(len_x,len_y), std::max(len_x,len_y)); 
   raw_matrix.setZero();
 }
@@ -319,6 +320,9 @@ index_tuple Similarity_Matrix_Skewed::trueindex2rawindex(index_tuple true_index)
   return _trueindex2rawindex(ti, tj, nrows, ncols, len_x, len_y);
 }
 
+inline Eigen::Index _trueindex2invindex(Eigen::Index ti, Eigen::Index size) {// 1-INDEX based for both input and output
+  return size + 1 - ti;
+}
 
 void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, const char &)> &scoring_function,
                                        double gap_penalty) {
@@ -326,34 +330,47 @@ void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, 
   auto nrows = raw_matrix.rows();
   auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;
+  std::string_view inv_sequence_y_view = inv_sequence_y;
 #ifdef USEOMP
   int omp_n_threads = omp_get_num_threads();
   std::cout<<"Similarity_Matrix_Skewed::iterate line 205 omp_n_threads: "<<omp_n_threads<<std::endl;
 #endif
   //Phase 1: Upper triangular part
   for (Eigen::Index j = 2; j < nrows; j++) {
+    auto [ti1, tj1] = _rawindex2trueindex(1, j, nrows, ncols, len_x, len_y);//here tj1 > tj2 while ti1 < ti2
+    auto [ti2, tj2] = _rawindex2trueindex(j - 1, j, nrows, ncols, len_x, len_y);
+    auto tj1_inv = _trueindex2invindex(tj1, len_y - 1);//now tj1_inv < tj2_inv
+    auto tj2_inv = _trueindex2invindex(tj2, len_y - 1);
+    auto subseqx = sequence_x.substr(ti1 - 1, ti2 - ti1 + 1);// 1-index
+    auto subseqy_inv = inv_sequence_y_view.substr(tj1_inv - 1, tj2_inv - tj1_inv + 1);
 #ifdef USEOMP
     //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, gap_penalty, scoring_function)
     #pragma omp simd
 #endif
     for (Eigen::Index i = 1; i < j; i++) {
-      auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
-      auto a = sequence_x[ti - 1];
-      auto b = sequence_y[tj - 1];
+      auto a = subseqx[i - 1];
+      auto b = subseqy_inv[i - 1];
       raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j - 1), raw_matrix(i, j - 1), raw_matrix(i - 1, j - 2), scoring_function(a, b), gap_penalty); 
     }
   }
   //Phase 2: Equal-length diagonal part
   for (Eigen::Index j = nrows; j < ncols; j++) {
+    int i0 = (int) flag;
+    auto in = nrows - 1 + i0 - 1;
+    auto [ti1, tj1] = _rawindex2trueindex(i0, j, nrows, ncols, len_x, len_y);//here tj1 > tj2 while ti1 < ti2
+    auto [ti2, tj2] = _rawindex2trueindex(in, j, nrows, ncols, len_x, len_y);
+    auto tj1_inv = _trueindex2invindex(tj1, len_y - 1);//now tj1_inv < tj2_inv
+    auto tj2_inv = _trueindex2invindex(tj2, len_y - 1);
+    auto subseqx = sequence_x.substr(ti1 - 1, ti2 - ti1 + 1);
+    auto subseqy_inv = inv_sequence_y_view.substr(tj1_inv - 1, tj2_inv - tj1_inv + 1);
     if (flag) {//Condition 1: diagonal propagate horizontaly (+y)
 #ifdef USEOMP
       //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, gap_penalty, scoring_function)
       #pragma omp simd
 #endif
       for (Eigen::Index i = 1; i < nrows; i++) {
-        auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
-        auto a = sequence_x[ti - 1];
-        auto b = sequence_y[tj - 1];
+        auto a = subseqx[i - i0];
+        auto b = subseqy_inv[i - i0];
         raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j - 1), raw_matrix(i, j - 1), raw_matrix(i - 1, j - 2), scoring_function(a, b), gap_penalty); 
       }
     } else {//Condition 2: diagonal propagate vertically (+x)
@@ -363,9 +380,8 @@ void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, 
       #pragma omp simd
 #endif
       for (Eigen::Index i = 0; i < nrows - 1; i++) {
-        auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
-        auto a = sequence_x[ti - 1];
-        auto b = sequence_y[tj - 1];
+        auto a = subseqx[i - i0];
+        auto b = subseqy_inv[i - i0];
         raw_matrix(i, j) = dp_func(raw_matrix(i , j - 1), raw_matrix(i + 1, j - 1), raw_matrix(i + di_nw , j - 2), scoring_function(a, b), gap_penalty); 
       }
     }
@@ -375,14 +391,21 @@ void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, 
     auto j_prev = j == 0 ? ncols - 1 : j - 1;
     auto j_prev2 = j <= 1 ? ncols - 2 + j : j - 2;
     auto di_nw = (j == 0) && (!flag) ? 1 : 0;
+    auto i0 = j + 1;
+    auto in = nrows - 1;
+    auto [ti1, tj1] = _rawindex2trueindex(i0, j, nrows, ncols, len_x, len_y);//here tj1 > tj2 while ti1 < ti2
+    auto [ti2, tj2] = _rawindex2trueindex(in, j, nrows, ncols, len_x, len_y);
+    auto tj1_inv = _trueindex2invindex(tj1, len_y - 1);//now tj1_inv < tj2_inv
+    auto tj2_inv = _trueindex2invindex(tj2, len_y - 1);
+    auto subseqx = sequence_x.substr(ti1 - 1, ti2 - ti1 + 1);
+    auto subseqy_inv = inv_sequence_y_view.substr(tj1_inv - 1, tj2_inv - tj1_inv + 1);
 #ifdef USEOMP
     //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, j_prev, j_prev2, di_nw, gap_penalty, scoring_function)
     #pragma omp simd
 #endif
     for (Eigen::Index i = j + 1; i < nrows; i++) {
-      auto [ti, tj] = _rawindex2trueindex(i, j, nrows, ncols, len_x, len_y);
-      auto a = sequence_x[ti - 1];
-      auto b = sequence_y[tj - 1];
+      auto a = subseqx[i - i0];
+      auto b = subseqy_inv[i - i0];
       raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j_prev), raw_matrix(i, j_prev), raw_matrix(i - 1 + di_nw, j_prev2), scoring_function(a, b), gap_penalty);
     }
   }

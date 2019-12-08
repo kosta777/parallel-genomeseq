@@ -323,8 +323,10 @@ void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, 
   auto nrows = raw_matrix.rows();
   auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;
+#ifdef USEOMP
   int omp_n_threads = omp_get_num_threads();
   std::cout<<"Similarity_Matrix_Skewed::iterate line 205 omp_n_threads: "<<omp_n_threads<<std::endl;
+#endif
   //Phase 1: Upper triangular part
   for (Eigen::Index j = 2; j < nrows; j++) {
 #ifdef USEOMP

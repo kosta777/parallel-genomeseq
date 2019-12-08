@@ -12,17 +12,17 @@ template <class Similarity_Matrix_Type>
 class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
   public:
     SWAligner(std::string_view, std::string_view);
-    SWAligner(std::string_view, std::string_view, double);
-    SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
-    SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&, double);
+    SWAligner(std::string_view, std::string_view, float);
+    SWAligner(std::string_view, std::string_view, std::function<float(const char &, const char &)> &&);
+    SWAligner(std::string_view, std::string_view, std::function<float(const char &, const char &)> &&, float);
     /*
      * Calculate similarity matrix entries and traceback.
      *
      * @return Maximum score in the similarity matrix.
      */
-    double calculateScore() override;
+    float calculateScore() override;
 
-    double getScore() const override {return max_score;}
+    float getScore() const override {return max_score;}
 
     /*
      * Position of the first matched position in sequence_x. Corresponds to POS in SAM file.
@@ -42,8 +42,8 @@ class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
     Eigen::VectorXf sm_timings;
     void traceback(index_tuple);
     unsigned int pos;
-    double max_score;
-    double gap_penalty;
+    float max_score;
+    float gap_penalty;
     std::string sequence_x;
     std::string sequence_y;
     /*
@@ -53,7 +53,7 @@ class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
     std::string consensus_x;
     std::string consensus_y;
     Similarity_Matrix_Type similarity_matrix;
-    std::function<double(const char &, const char &)> scoring_function;
+    std::function<float(const char &, const char &)> scoring_function;
 };
 
 #endif

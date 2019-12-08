@@ -14,7 +14,7 @@ const int read_size = 125;
 struct read_output{
     char buff[read_size + 1];
     int pos_pred;
-    double score;
+    float score;
 };
 
 int main(int argc, char* argv[])
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 
     struct read_output out;
     MPI_Datatype Outputtype;
-    MPI_Datatype type[3] = { MPI_CHAR, MPI_INT, MPI_DOUBLE };
+    MPI_Datatype type[3] = { MPI_CHAR, MPI_INT, MPI_float };
     int blocklen[3] = { read_size+1, 1, 1 };
     MPI_Aint disp[3];
     disp[0] = (char*)&out.buff - (char*)&out;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
             std::string input_line_tmp = input_line;
             std::string input_header_line;
             std::string output_header_line;
-            double score_tmp;
+            float score_tmp;
             int pos_pred_tmp;
 
             ind++;

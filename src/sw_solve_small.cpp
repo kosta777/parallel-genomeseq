@@ -48,9 +48,9 @@ int main() {
   std::string input_header_line;
   std::string output_header_line;
 
-  double score_tmp;
+  float score_tmp;
   size_t pos_pred_tmp;
-  double time_avg = 0.0;
+  float time_avg = 0.0;
   i = 0;
   while (std::getline(align_input, input_line)) {
     std::vector<std::string> row;
@@ -77,11 +77,11 @@ int main() {
       std::cout << row[2] << std::endl;
 #endif
       {
-#ifdef USEOMP
-        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,4,2.0);
-#else
+//#ifdef USEOMP
+//        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,4,2.0);
+//#else
         auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
-#endif
+//#endif
         score_tmp = la->calculateScore();
         pos_pred_tmp = la->getPos();
         time_avg += la->getTimings()[0];

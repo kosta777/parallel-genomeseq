@@ -69,14 +69,14 @@ template <class Similarity_Matrix_Type>
 class SWAligner : public LocalAligner <Similarity_Matrix_Type> {
   public:
     SWAligner(std::string_view, std::string_view);
-    SWAligner(std::string_view, std::string_view, std::function<double(const char &, const char &)> &&);
+    SWAligner(std::string_view, std::string_view, std::function<float(const char &, const char &)> &&);
 }
 //API
 template <class Similarity_Matrix_Type>
 class LocalAligner {
   public:
-    virtual double calculateScore() = 0;
-    virtual double getScore() const = 0;
+    virtual float calculateScore() = 0;
+    virtual float getScore() const = 0;
     virtual unsigned int getPos() const = 0;
     virtual std::string_view getConsensus_x() const = 0;
     virtual std::string_view getConsensus_y() const = 0;
@@ -85,12 +85,12 @@ class LocalAligner {
 template <class Similarity_Matrix_Type, class LocalAligner_Type>
 class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Type, LocalAligner_Type> {
   public:
-    OMPParallelLocalAligner(std::string_view, std::string_view, int, double);
-    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, double);
-    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, std::function<double(const char &, const char &)> &&);
-    OMPParallelLocalAligner(std::string_view, std::string_view, int, double, std::function<double(const char &, const char &)> &&, double);
-    double calculateScore();
-    double getScore() const;
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, float);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, float, float);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, float, std::function<float(const char &, const char &)> &&);
+    OMPParallelLocalAligner(std::string_view, std::string_view, int, float, std::function<float(const char &, const char &)> &&, float);
+    float calculateScore();
+    float getScore() const;
     unsigned int getPos() const;
     std::string_view getConsensus_x() const;
     std::string_view getConsensus_y() const;
@@ -98,12 +98,12 @@ class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Ty
 //API for similarity matrix
 class Abstract_Similarity_Matrix{
   public:
-    virtual void iterate(const std::function<double(const char &, const char &)> &scoring_function,
-                         double gap_penalty) = 0;
-    virtual std::tuple<Eigen::Index, Eigen::Index, double> find_index_of_maximum() const = 0;
+    virtual void iterate(const std::function<float(const char &, const char &)> &scoring_function,
+                         float gap_penalty) = 0;
+    virtual std::tuple<Eigen::Index, Eigen::Index, float> find_index_of_maximum() const = 0;
     virtual void print_matrix() const = 0;
-    virtual const Eigen::MatrixXd &get_matrix() const = 0;
-    virtual double operator()(Eigen::Index row, Eigen::Index col) const = 0;
+    virtual const Eigen::MatrixXf &get_matrix() const = 0;
+    virtual float operator()(Eigen::Index row, Eigen::Index col) const = 0;
 };
 ```
 

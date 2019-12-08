@@ -10,19 +10,19 @@ SWAligner<SMT>::SWAligner(std::string_view first_sequence, std::string_view seco
 template <class SMT>
 SWAligner<SMT>::SWAligner(std::string_view first_sequence,
                           std::string_view second_sequence,
-                          double gap_penalty) :
+                          float gap_penalty) :
     SWAligner(first_sequence, second_sequence, [](const char &a, const char &b) { return a == b ? 3.0 : -3.0; }, gap_penalty) {}
 
 template <class SMT>
 SWAligner<SMT>::SWAligner(std::string_view first_sequence,
                           std::string_view second_sequence,
-                          std::function<double(const char &, const char &)> &&scoring_function) :
+                          std::function<float(const char &, const char &)> &&scoring_function) :
     SWAligner(first_sequence, second_sequence, std::move(scoring_function), 2.0) {}
 
 template <class SMT>
 SWAligner<SMT>::SWAligner(std::string_view first_sequence,
                      std::string_view second_sequence,
-                     std::function<double(const char &, const char &)> &&scoring_function, double gap_penalty) :
+                     std::function<float(const char &, const char &)> &&scoring_function, float gap_penalty) :
     sm_timings(2),
     pos(0),
     max_score(-1),
@@ -78,7 +78,7 @@ void SWAligner<SMT>::traceback(index_tuple similarity_matrix_max) {
 }
 
 template <class SMT>
-double SWAligner<SMT>::calculateScore() {
+float SWAligner<SMT>::calculateScore() {
 #ifdef USEOMP
   similarity_matrix.sm_nthreads = sw_nthreads;
   similarity_matrix.sm_finegrain_type = sw_finegrain_type;

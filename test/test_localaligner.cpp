@@ -28,7 +28,7 @@ namespace {
 
   /*
   TEST_F(SWAligner_Test, Example_output) {
-    Eigen::MatrixXd refrence_m(10, 9);
+    Eigen::MatrixXf refrence_m(10, 9);
     refrence_m <<
       0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,  0,  3,  1,  0,  0,  0,  3,  3,
@@ -43,7 +43,7 @@ namespace {
 
 
     ASSERT_PRED2(
-        [](const Eigen::MatrixXd &lhs, const Eigen::MatrixXd &rhs) { return lhs.isApprox(rhs, 1e-4);},
+        [](const Eigen::MatrixXf &lhs, const Eigen::MatrixXf &rhs) { return lhs.isApprox(rhs, 1e-4);},
         refrence_m,
         la->getSimilarity_matrix().get_matrix()
     );

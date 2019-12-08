@@ -10,10 +10,10 @@ TEST(SimilarityMatrix,SkewedMatrixIndex) {
   auto skewed1 = Similarity_Matrix_Skewed(sequence_y, sequence_x);//SWITCHING SEQX AND SEQY
   auto skewed2 = Similarity_Matrix_Skewed(sequence_x, sequence_y);//SWITCHING SEQX AND SEQY
   auto size = len_x * len_y;
-  Eigen::VectorXd initvec = Eigen::VectorXd::LinSpaced(size, 0., size - 1);
-  auto raw_matrix = Eigen::MatrixXd(len_y, len_x);
-  auto true_matrix = Eigen::MatrixXd(len_x, len_y);
-  //auto true_matrix = Eigen::Map<Eigen::MatrixXd>(initvec.data(), len_x, len_y);
+  Eigen::VectorXf initvec = Eigen::VectorXf::LinSpaced(size, 0., size - 1);
+  auto raw_matrix = Eigen::MatrixXf(len_y, len_x);
+  auto true_matrix = Eigen::MatrixXf(len_x, len_y);
+  //auto true_matrix = Eigen::Map<Eigen::MatrixXf>(initvec.data(), len_x, len_y);
   for (size_t j = 0; j < len_y; j++) {
     for (size_t i = 0; i < len_x; i++) {
       auto idx1 = index_tuple(i,j);

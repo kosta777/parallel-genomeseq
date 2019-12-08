@@ -67,7 +67,6 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
   const unsigned int dim_x = raw_matrix.rows();
   const unsigned int dim_y = raw_matrix.cols();
 
-  int omp_n_threads2;
   auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
   for (Eigen::Index i = 1; i < dim_x + dim_y - 2; ++i){
     Eigen::Index local_i = i;
@@ -83,6 +82,7 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
     }
 
 #ifdef USEOMP
+    int omp_n_threads2;
     omp_n_threads2 = omp_get_num_threads();
     auto iter_ad_i_start = std::chrono::high_resolution_clock::now();
     if (sm_finegrain_type==0){   //finegrain type 0: first attempt
@@ -226,7 +226,7 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
   auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end-iter_ad_read_start);
   sm_iter_ad_read_time = (float) read_duration.count();
 //  std::cout<<"Similarity_Matrix::iterate omp_n_threads: "<<omp_n_threads<<std::endl;
-  std::cout<<"Similarity_Matrix::iterate omp_n_threads2: "<<omp_n_threads2<<std::endl;
+//  std::cout<<"Similarity_Matrix::iterate omp_n_threads2: "<<omp_n_threads2<<std::endl;
 }
 
 const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {
@@ -320,6 +320,7 @@ index_tuple Similarity_Matrix_Skewed::trueindex2rawindex(index_tuple true_index)
 
 void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, const char &)> &scoring_function,
                                        double gap_penalty) {
+  auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
   auto nrows = raw_matrix.rows();
   auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;
@@ -383,4 +384,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<double(const char &, 
       raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j_prev), raw_matrix(i, j_prev), raw_matrix(i - 1 + di_nw, j_prev2), scoring_function(a, b), gap_penalty);
     }
   }
+  auto iter_ad_read_end = std::chrono::high_resolution_clock::now();
+  auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end-iter_ad_read_start);
+  sm_iter_ad_read_time = (float) read_duration.count();
 }

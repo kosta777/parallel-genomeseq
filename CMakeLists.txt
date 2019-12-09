@@ -5,8 +5,8 @@ include("cmake/clang_tidy.cmake")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CC_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Og -Wall -pedantic -Wextra -g -ggdb --std=c++17")
-set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17 -flto") #-fopt-info
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Og -Wall -pedantic -Wextra -g -ggdb --std=c++17 -mavx -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Ofast -march=native -Wall -std=c++17 -flto -mavx -mtune=native -ffast-math -ftree-loop-if-convert") #-fopt-info #-fopt-info-vec-all
 SET(CMAKE_AR "gcc-ar")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
 SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -77,6 +77,9 @@ target_link_libraries(sw_solve_small PRIVATE libaligner)
 
 add_executable(mpi_sw_solve_small src/mpi_sw_solve_small.cpp)
 target_link_libraries(mpi_sw_solve_small PRIVATE libaligner)
+
+add_executable(mpi_sw_solve_uniprot src/mpi_sw_solve_uniprot.cpp)
+target_link_libraries(mpi_sw_solve_uniprot PRIVATE libaligner)
 
 add_executable(omp_sw_solve_small src/omp_sw_solve_small.cpp)
 target_link_libraries(omp_sw_solve_small PRIVATE libaligner)

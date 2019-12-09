@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
     std::string input_header_line;
     std::string output_header_line;
 
-    double score_tmp;
+    float score_tmp;
     Eigen::Index pos_pred_tmp;
     Eigen::VectorXf SM_timings_tmp;
     i = 0;
@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
   } else if (argv1 == "eigen1") {
     std::cout << "Hello omp eigen" << std::endl;
 
-    Eigen::VectorXd test_vec = Eigen::VectorXd::Zero(12);
+    Eigen::VectorXf test_vec = Eigen::VectorXf::Zero(12);
     std::cout << test_vec << std::endl;
     std::cout << test_vec.size() << std::endl;
 
@@ -261,7 +261,7 @@ int main(int argc, char **argv) {
   } else if (argv1 == "eigen2") {
     std::cout << "Hello omp eigen" << std::endl;
 
-    Eigen::VectorXd test_vec = Eigen::VectorXd::Zero(12);
+    Eigen::VectorXf test_vec = Eigen::VectorXf::Zero(12);
     std::cout << test_vec << std::endl;
     std::cout << test_vec.size() << std::endl;
 
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
   } else if (argv1 == "eigen3") {
     std::cout << "Hello omp eigen" << std::endl;
 
-    Eigen::VectorXd test_vec = Eigen::VectorXd::LinSpaced(12, 11, 0);
+    Eigen::VectorXf test_vec = Eigen::VectorXf::LinSpaced(12, 11, 0);
     std::cout << test_vec << std::endl;
     std::cout << test_vec.size() << std::endl;
 

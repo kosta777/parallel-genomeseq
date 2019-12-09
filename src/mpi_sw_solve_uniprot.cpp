@@ -14,7 +14,7 @@ const int read_size = 125;
 struct read_output{
     char buff[read_size + 1];
     int pos_pred;
-    float score;
+    double score;
 };
 
 int main(int argc, char* argv[])
@@ -29,8 +29,10 @@ int main(int argc, char* argv[])
     char err_buffer[MPI_MAX_ERROR_STRING];
     char *buff;
 
-    const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa";
+    const std::string fa_file_path = "data/query/P02232.fasta";
     const std::string output_file_path = "data/align_output.csv";
+    const std::string stats_file_path = "data/uniprot/stats.txt";
+    const std::string reffile_file_path = "data/uniprot/";
 
     //Initialize MPI 
     MPI_Init(&argc, &argv);
@@ -45,32 +47,7 @@ int main(int argc, char* argv[])
         MPI_Finalize();
         return 0;
     }
-    
-    MPI_File_open( comm, "data/data_small/mpi_test_tiny.fq", MPI_MODE_RDONLY, MPI_INFO_NULL, &fh );
-    MPI_File_get_size(fh, &total_number_of_bytes);
-    number_of_bytes = total_number_of_bytes/(size - 1);
-    int row_cnt = total_number_of_bytes/126;
-    int row_cnt_per_core = row_cnt/(size -1);
-    MPI_Offset offset = rank*row_cnt_per_core*126;
-    int amount_to_read = (rank == size-2) ? (total_number_of_bytes - offset) : (row_cnt_per_core * 126);
-
-    buff = (char*) malloc(sizeof(char)*amount_to_read);
-
-    int err = MPI_File_read_at_all(fh, offset, buff, amount_to_read, MPI_CHAR, &status);
-    if(err != MPI_SUCCESS)
-    {
-        MPI_Error_class(err,&errclass);
-        if (errclass== MPI_ERR_COUNT)
-            std::cout<<"Error reding with MPI, invalid count class."<<std::endl;
-        
-        MPI_Error_string(err,err_buffer,&resultlen);
-        fprintf(stderr,err_buffer);
-        free(buff);
-        MPI_File_close(&fh);
-        MPI_Finalize();
-        return 0;
-    }
-
+   
     //Read reference genome
     std::ifstream fa;
     fa.open(fa_file_path);
@@ -85,10 +62,18 @@ int main(int argc, char* argv[])
     }
     fa.close();
 
+    std::ifstream stats;
+    stats.open(stats_file_path);
+    int filecnt = 0;
+    stats >> filecnt;
+    stats.close();
+
+    int files_per_rank = filecnt/(size-1);
+    std::cout<<files_per_rank<<std::endl;
 
     struct read_output out;
     MPI_Datatype Outputtype;
-    MPI_Datatype type[3] = { MPI_CHAR, MPI_INT, MPI_float };
+    MPI_Datatype type[3] = { MPI_CHAR, MPI_INT, MPI_DOUBLE };
     int blocklen[3] = { read_size+1, 1, 1 };
     MPI_Aint disp[3];
     disp[0] = (char*)&out.buff - (char*)&out;
@@ -106,18 +91,27 @@ int main(int argc, char* argv[])
         std::string delimiter = ",";
         std::ofstream align_output;
         std::string output_line;
-        while(true)
+        std::string ref_string;
+        while(i< files_per_rank)
         {
-            //End condition = if there are no reads left for this node - terminate
-            if(ind*read_size+off >= amount_to_read || (ind+1)*read_size+off >= amount_to_read)
-                break;
-
-            //Take out a single read from the read buffer
-            std::string input_line(buff + ind*read_size + off, buff +(ind+1)*read_size + off);
+            std::ifstream reffile;
+            reffile.open(reffile_file_path+std::to_string(rank * files_per_rank + i)+".fasta");
+            std::cout<<"Rank"<<rank<<" opening" << reffile_file_path+std::to_string(rank * files_per_rank + i)+".fasta"<<std::endl;
+            
+            std::string input_line = "";
+            //extract read from reffile
+            std::string pom_line;
+            //throw away first line
+            std::getline(reffile, pom_line);
+            while (std::getline(reffile, pom_line))
+            {
+               input_line += pom_line; 
+            }
+            reffile.close();
             std::string input_line_tmp = input_line;
             std::string input_header_line;
             std::string output_header_line;
-            float score_tmp;
+            double score_tmp;
             int pos_pred_tmp;
 
             ind++;
@@ -128,11 +122,11 @@ int main(int argc, char* argv[])
                 pos_pred_tmp = la->getPos();
             }
 
-#ifdef VERBOSE                           
+
             if (i % 50 == 0) {
               std::cout<<"Rank "<<rank<< " progress: " << i << std::endl;
             }
-#endif
+
             i++;
             //Send data to the writer node
             sprintf(out.buff, "%.126s", input_line.c_str());
@@ -140,6 +134,7 @@ int main(int argc, char* argv[])
             out.score = score_tmp;
 
             MPI_Send(&out, 1, Outputtype, size-1, 123, comm);   
+            
        }
 #ifdef VERBOSE
        std::cout<<"Rank "<<rank<<" done("<<ind<<")"<<std::endl;
@@ -153,7 +148,7 @@ int main(int argc, char* argv[])
         std::ofstream align_output;
         align_output.open(output_file_path);
         std::string output_line;
-        while(count < row_cnt+1)
+        while(count < files_per_rank+1)
         {
             std::string input_line;
             if(count == 0)

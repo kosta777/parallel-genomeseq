@@ -14,7 +14,7 @@ const int read_size = 125;
 struct read_output{
     char buff[read_size + 1];
     int pos_pred;
-    float score;
+    double score;
 };
 
 int main(int argc, char* argv[])
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     char err_buffer[MPI_MAX_ERROR_STRING];
     char *buff;
 
-    const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa";
+    const std::string fa_file_path = "data/query/P02232.fasta";
     const std::string output_file_path = "data/align_output.csv";
 
     //Initialize MPI 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     
-    MPI_File_open( comm, "data/data_small/mpi_test_tiny.fq", MPI_MODE_RDONLY, MPI_INFO_NULL, &fh );
+    MPI_File_open( comm, "data/uniprot/database.fasta", MPI_MODE_RDONLY, MPI_INFO_NULL, &fh );
     MPI_File_get_size(fh, &total_number_of_bytes);
     number_of_bytes = total_number_of_bytes/(size - 1);
     int row_cnt = total_number_of_bytes/126;
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 
     struct read_output out;
     MPI_Datatype Outputtype;
-    MPI_Datatype type[3] = { MPI_CHAR, MPI_INT, MPI_float };
+    MPI_Datatype type[3] = { MPI_CHAR, MPI_INT, MPI_DOUBLE };
     int blocklen[3] = { read_size+1, 1, 1 };
     MPI_Aint disp[3];
     disp[0] = (char*)&out.buff - (char*)&out;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
             std::string input_line_tmp = input_line;
             std::string input_header_line;
             std::string output_header_line;
-            float score_tmp;
+            double score_tmp;
             int pos_pred_tmp;
 
             ind++;
@@ -128,11 +128,11 @@ int main(int argc, char* argv[])
                 pos_pred_tmp = la->getPos();
             }
 
-#ifdef VERBOSE                           
+
             if (i % 50 == 0) {
               std::cout<<"Rank "<<rank<< " progress: " << i << std::endl;
             }
-#endif
+
             i++;
             //Send data to the writer node
             sprintf(out.buff, "%.126s", input_line.c_str());

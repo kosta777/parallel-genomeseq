@@ -225,8 +225,6 @@ void Similarity_Matrix::iterate(const std::function<double(const char &, const c
   auto iter_ad_read_end = std::chrono::high_resolution_clock::now();
   auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end-iter_ad_read_start);
   sm_iter_ad_read_time = (float) read_duration.count();
-//  std::cout<<"Similarity_Matrix::iterate omp_n_threads: "<<omp_n_threads<<std::endl;
-  std::cout<<"Similarity_Matrix::iterate omp_n_threads2: "<<omp_n_threads2<<std::endl;
 }
 
 const Eigen::MatrixXd &Similarity_Matrix::get_matrix() const {

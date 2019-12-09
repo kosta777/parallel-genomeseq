@@ -63,25 +63,29 @@ void CSVWriter::addDatainRow(T first, T last, int append)
 
 int main(int argc, char **argv) {
 #ifdef USEOMP
-  if (argc < 5) exit(-1);
+  if (argc < 8) exit(-1);
   std::string argv1 = argv[1];
   int arg_nreads = std::stoi(argv[2]);
   int arg_nthreads = std::stoi(argv[3]);
   int arg_finegrain_type = std::stoi(argv[4]);
+  std::string arg_timing_file_path = argv[5];
+  std::string arg_ref_file_path = argv[6];
+  std::string arg_reads_file_path = argv[7];
+
   if (argv1 == "0") {
     std::cout << "Hello omp" << std::endl;
 #pragma omp parallel for default(none) num_threads(3)
     for (int n = 0; n < 6; ++n) printf("Thread: %d, Num: %d\n", omp_get_thread_num(), n);
   } else if (argv1 == "solve_small") {
 
-//    const std::string fa_file_path = "data/data_small/genome.chr22.5K.fa"; //fa contains reference
-//    const std::string fa_file_path = "data/genome.chr22.fa"; //fa contains reference
-    const std::string fa_file_path = "data/test_fa_custom1.fa"; //fa contains reference
+    const std::string timing_file_path = arg_timing_file_path;
 
-//    const std::string input_file_path = "data/data_small_ground_truth.csv";
-    const std::string input_file_path = "data/ground_truth_custom10k.csv";
-    const std::string output_file_path = "data/align_output.csv";
-    const std::string timing_file_path = "data/timings/timing_20191122_1650_ompfg_oxtest.csv";
+//    const std::string fa_file_path = "data/test_fa_custom1.fa"; //fa contains reference
+    const std::string fa_file_path = arg_ref_file_path; //fa contains reference
+
+//    const std::string input_file_path = "data/ground_truth_custom10k.csv";
+    const std::string input_file_path = arg_reads_file_path;
+    const std::string align_output_file_path = "data/ompfg_align_output.csv";
 
     int fa_file_has_header = 0;
 
@@ -113,7 +117,7 @@ int main(int argc, char **argv) {
     std::string delimiter = ",";
 
     std::ofstream align_output;
-    align_output.open(output_file_path);
+    align_output.open(align_output_file_path);
     std::string output_line;
 
     std::string input_header_line;
@@ -196,7 +200,7 @@ int main(int argc, char **argv) {
 
     align_input.close();
     align_output.close();
-    std::cout << "Done, output file see: " << output_file_path << std::endl;
+    std::cout << "Done, align output file see: " << align_output_file_path << std::endl;
     
     std::cout << "calculateScore_times (us): " << std::endl;
     std::cout << calculateScore_times << std::endl;

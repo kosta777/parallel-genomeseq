@@ -48,6 +48,13 @@ float dp_func(float north, float west, float north_west, float score, float gap_
   return std::max(std::max(x,y),std::max(z,(float)0.0));
 }
 
+inline Eigen::Array4f dp_func(Eigen::Array4f north, Eigen::Array4f west, Eigen::Array4f north_west, Eigen::Array4f score, float gap_penalty) {
+  auto x = north_west + score;
+  auto y = west - gap_penalty;
+  auto z = north - gap_penalty;
+  return x.max(y).max(z.max((float)0.0));
+}
+
 void Similarity_Matrix::iterate_column(const std::function<float(const char &, const char &)> &scoring_function,
                                 float gap_penalty) {
   auto nrows = raw_matrix.rows();
@@ -355,7 +362,16 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
     //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, gap_penalty, scoring_function)
     #pragma omp simd
 #endif
-    for (Eigen::Index i = 1; i < j; i++) {
+    Eigen::Index i;
+    for (i = i0; i <= in - 3; i+=4) {
+      Eigen::Map<Eigen::Array4f> north(&raw_matrix(i - 1, j - 1));
+      Eigen::Map<Eigen::Array4f> west(&raw_matrix(i, j - 1));
+      Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i - 1, j - 2));
+      Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
+      Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
+      dest = dp_func(north, west, north_west, scores, gap_penalty);
+    }
+    for (; i <= in; i++) {
       raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j - 1), raw_matrix(i, j - 1), raw_matrix(i - 1, j - 2), score_cache(i - i0), gap_penalty);
     }
   }
@@ -373,7 +389,16 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
       //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, gap_penalty, scoring_function)
       #pragma omp simd
 #endif
-      for (Eigen::Index i = 1; i < nrows; i++) {
+      Eigen::Index i;
+      for (i = i0; i <= in - 3; i+=4) {
+        Eigen::Map<Eigen::Array4f> north(&raw_matrix(i - 1, j - 1));
+        Eigen::Map<Eigen::Array4f> west(&raw_matrix(i, j - 1));
+        Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i - 1, j - 2));
+        Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
+        Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
+        dest = dp_func(north, west, north_west, scores, gap_penalty);
+      }
+      for (; i <= in; i++) {
         raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j - 1), raw_matrix(i, j - 1), raw_matrix(i - 1, j - 2), score_cache(i - i0), gap_penalty);
       }
     } else {//Condition 2: diagonal propagate vertically (+x)
@@ -382,7 +407,16 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
       //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, di_nw, gap_penalty, scoring_function)
       #pragma omp simd
 #endif
-      for (Eigen::Index i = 0; i < nrows - 1; i++) {
+      Eigen::Index i;
+      for (i = i0; i <= in - 3; i+=4) {
+        Eigen::Map<Eigen::Array4f> north(&raw_matrix(i, j - 1));
+        Eigen::Map<Eigen::Array4f> west(&raw_matrix(i + 1, j - 1));
+        Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i + di_nw, j - 2));
+        Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
+        Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
+        dest = dp_func(north, west, north_west, scores, gap_penalty);
+      }
+      for (; i <= in; i++) {
         raw_matrix(i, j) = dp_func(raw_matrix(i , j - 1), raw_matrix(i + 1, j - 1), raw_matrix(i + di_nw , j - 2), score_cache(i - i0), gap_penalty);
       }
     }
@@ -403,7 +437,16 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
     //#pragma omp parallel for default(none) shared(j, nrows, ncols, len_x, len_y, j_prev, j_prev2, di_nw, gap_penalty, scoring_function)
     #pragma omp simd
 #endif
-    for (Eigen::Index i = j + 1; i < nrows; i++) {
+    Eigen::Index i;
+    for (i = i0; i <= in - 3; i+=4) {
+      Eigen::Map<Eigen::Array4f> north(&raw_matrix(i - 1, j_prev));
+      Eigen::Map<Eigen::Array4f> west(&raw_matrix(i, j_prev));
+      Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i - 1 + di_nw, j_prev2));
+      Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
+      Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
+      dest = dp_func(north, west, north_west, scores, gap_penalty);
+    }
+    for (; i <= in; i++) {
       raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j_prev), raw_matrix(i, j_prev), raw_matrix(i - 1 + di_nw, j_prev2), score_cache(i - i0), gap_penalty);
     }
   }

@@ -60,8 +60,7 @@ inline Eigen::Array4f dp_func(Eigen::Array4f north,
   return x.max(y).max(z.max((float) 0.0));
 }
 
-inline __m256 dp_func(__m256 north, __m256 west, __m256 north_west, __m256 score, float gap_penalty) {
-  auto gap_penalty_vec = _mm256_set1_ps(gap_penalty);
+inline __m256 dp_func(__m256 north, __m256 west, __m256 north_west, __m256 score, __m256 gap_penalty_vec) {
   auto zeros = _mm256_set1_ps(0.0);
   auto x = north_west + score;
   auto y = west - gap_penalty_vec;
@@ -367,6 +366,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
   auto flag = len_x < len_y;
   auto match_score = _mm256_set1_ps(scoring_function('A', 'A'));
   auto mismatch_score = _mm256_set1_ps(scoring_function('A', 'T'));
+  auto gap_penalty_vec = _mm256_set1_ps(gap_penalty);
 #ifdef VERBOSE
 #ifdef USEOMP
   int omp_n_threads = omp_get_num_threads();
@@ -388,7 +388,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
       __m256i seqy = _mm256_loadu_si256((__m256i *) &inv_sequence_y(tj1_inv - 1 + i - i0));
       __m256 mask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
       __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, mask);
-      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
       _mm256_storeu_ps(&raw_matrix(i, j), dest);
     }
     if (i <= in) {
@@ -400,7 +400,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
       __m256i seqy = _mm256_maskload_epi32(&inv_sequence_y(tj1_inv - 1 + i - i0), mask);
       __m256 seqmask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
       __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, seqmask);
-      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
       _mm256_maskstore_ps(&raw_matrix(i, j), mask, dest);
     }
   }
@@ -420,7 +420,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
         __m256i seqy = _mm256_loadu_si256((__m256i *) &inv_sequence_y(tj1_inv - 1 + i - i0));
         __m256 seqmask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
         __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, seqmask);
-        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
         _mm256_storeu_ps(&raw_matrix(i, j), dest);
       }
       if (i <= in) {
@@ -432,7 +432,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
         __m256i seqy = _mm256_maskload_epi32(&inv_sequence_y(tj1_inv - 1 + i - i0), mask);
         __m256 seqmask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
         __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, seqmask);
-        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
         _mm256_maskstore_ps(&raw_matrix(i, j), mask, dest);
       }
     } else {//Condition 2: diagonal propagate vertically (+x)
@@ -446,7 +446,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
         __m256i seqy = _mm256_loadu_si256((__m256i *) &inv_sequence_y(tj1_inv - 1 + i - i0));
         __m256 seqmask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
         __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, seqmask);
-        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
         _mm256_storeu_ps(&raw_matrix(i, j), dest);
       }
       if (i <= in) {
@@ -458,7 +458,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
         __m256i seqy = _mm256_maskload_epi32(&inv_sequence_y(tj1_inv - 1 + i - i0), mask);
         __m256 seqmask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
         __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, seqmask);
-        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+        __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
         _mm256_maskstore_ps(&raw_matrix(i, j), mask, dest);
       }
     }
@@ -481,7 +481,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
       __m256i seqy = _mm256_loadu_si256((__m256i *) &inv_sequence_y(tj1_inv - 1 + i - i0));
       __m256 seqmask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
       __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, seqmask);
-      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
       _mm256_storeu_ps(&raw_matrix(i, j), dest);
     }
     if (i <= in) {
@@ -493,7 +493,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
       __m256i seqy = _mm256_maskload_epi32(&inv_sequence_y(tj1_inv - 1 + i - i0), mask);
       __m256 seqmask = _mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
       __m256 scores = _mm256_blendv_ps(mismatch_score, match_score, seqmask);
-      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty);
+      __m256 dest = dp_func(north, west, north_west, scores, gap_penalty_vec);
       _mm256_maskstore_ps(&raw_matrix(i, j), mask, dest);
     }
   }

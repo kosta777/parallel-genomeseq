@@ -83,7 +83,6 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
     Eigen::ArrayXi sequence_x;
     //Eigen::ArrayXi sequence_y;
     Eigen::ArrayXi inv_sequence_y;
-    Eigen::ArrayXf score_cache;
     float sm_iter_ad_read_time;  //anti-diagonal
     Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
 

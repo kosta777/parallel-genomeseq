@@ -160,3 +160,23 @@ cd ..
 bin/omp_sw_solve_small solve_small n_reads n_threads
 (e.g.) bin/omp_sw_solve_small solve_small 3 2
 ```
+
+## Benchmarking Specific Usage
+#Fine-grained OMP
+```bash
+sh benchmark/leonhardsetup.sh
+sh benchmark/data_get_chr22.sh
+
+python py/ompfg_data_prep.py  --option gen_ref_custom
+python py/ompfg_data_prep.py  --option gen_reads_custom
+
+rm -rf build
+mkdir build
+cd build
+cmake .. -DUSEOMP=ON
+make
+cd ..
+
+sh benchmark/omp_finegrain_benchmark.sh
+python py/eval.py --option ompfg
+```

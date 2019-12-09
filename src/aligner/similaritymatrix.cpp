@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <Eigen/Dense>
 #include <chrono>
+#include <immintrin.h>
 
 #ifdef USEOMP
 #include <omp.h>
@@ -53,6 +54,15 @@ inline Eigen::Array4f dp_func(Eigen::Array4f north, Eigen::Array4f west, Eigen::
   auto y = west - gap_penalty;
   auto z = north - gap_penalty;
   return x.max(y).max(z.max((float)0.0));
+}
+
+inline __m128 dp_func(__m128 north, __m128 west, __m128 north_west, __m128 score, float gap_penalty) {
+  auto gap_penalty_vec = _mm_set1_ps(gap_penalty);
+  auto zeros = _mm_set1_ps(0.0);
+  auto x = north_west + score;
+  auto y = west - gap_penalty;
+  auto z = north - gap_penalty;
+  return _mm_max_ps(_mm_max_ps(x,y),_mm_max_ps(z,zeros));
 }
 
 void Similarity_Matrix::iterate_column(const std::function<float(const char &, const char &)> &scoring_function,
@@ -364,12 +374,12 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
 #endif
     Eigen::Index i;
     for (i = i0; i <= in - 3; i+=4) {
-      Eigen::Map<Eigen::Array4f> north(&raw_matrix(i - 1, j - 1));
-      Eigen::Map<Eigen::Array4f> west(&raw_matrix(i, j - 1));
-      Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i - 1, j - 2));
-      Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
-      Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
-      dest = dp_func(north, west, north_west, scores, gap_penalty);
+      __m128 north = _mm_loadu_ps(&raw_matrix(i - 1, j - 1));
+      __m128 west = _mm_loadu_ps(&raw_matrix(i, j - 1));
+      __m128 north_west = _mm_loadu_ps(&raw_matrix(i - 1, j - 2));
+      __m128 scores = _mm_loadu_ps(&score_cache(i - i0));
+      __m128 dest = dp_func(north, west, north_west, scores, gap_penalty);
+      _mm_storeu_ps(&raw_matrix(i, j), dest);
     }
     for (; i <= in; i++) {
       raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j - 1), raw_matrix(i, j - 1), raw_matrix(i - 1, j - 2), score_cache(i - i0), gap_penalty);
@@ -391,12 +401,12 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
 #endif
       Eigen::Index i;
       for (i = i0; i <= in - 3; i+=4) {
-        Eigen::Map<Eigen::Array4f> north(&raw_matrix(i - 1, j - 1));
-        Eigen::Map<Eigen::Array4f> west(&raw_matrix(i, j - 1));
-        Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i - 1, j - 2));
-        Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
-        Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
-        dest = dp_func(north, west, north_west, scores, gap_penalty);
+        __m128 north = _mm_loadu_ps(&raw_matrix(i - 1, j - 1));
+        __m128 west = _mm_loadu_ps(&raw_matrix(i, j - 1));
+        __m128 north_west = _mm_loadu_ps(&raw_matrix(i - 1, j - 2));
+        __m128 scores = _mm_loadu_ps(&score_cache(i - i0));
+        __m128 dest = dp_func(north, west, north_west, scores, gap_penalty);
+        _mm_storeu_ps(&raw_matrix(i, j), dest);
       }
       for (; i <= in; i++) {
         raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j - 1), raw_matrix(i, j - 1), raw_matrix(i - 1, j - 2), score_cache(i - i0), gap_penalty);
@@ -409,12 +419,12 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
 #endif
       Eigen::Index i;
       for (i = i0; i <= in - 3; i+=4) {
-        Eigen::Map<Eigen::Array4f> north(&raw_matrix(i, j - 1));
-        Eigen::Map<Eigen::Array4f> west(&raw_matrix(i + 1, j - 1));
-        Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i + di_nw, j - 2));
-        Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
-        Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
-        dest = dp_func(north, west, north_west, scores, gap_penalty);
+        __m128 north = _mm_loadu_ps(&raw_matrix(i, j - 1));
+        __m128 west = _mm_loadu_ps(&raw_matrix(i + 1, j - 1));
+        __m128 north_west = _mm_loadu_ps(&raw_matrix(i + di_nw, j - 2));
+        __m128 scores = _mm_loadu_ps(&score_cache(i - i0));
+        __m128 dest = dp_func(north, west, north_west, scores, gap_penalty);
+        _mm_storeu_ps(&raw_matrix(i, j), dest);
       }
       for (; i <= in; i++) {
         raw_matrix(i, j) = dp_func(raw_matrix(i , j - 1), raw_matrix(i + 1, j - 1), raw_matrix(i + di_nw , j - 2), score_cache(i - i0), gap_penalty);
@@ -439,12 +449,12 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
 #endif
     Eigen::Index i;
     for (i = i0; i <= in - 3; i+=4) {
-      Eigen::Map<Eigen::Array4f> north(&raw_matrix(i - 1, j_prev));
-      Eigen::Map<Eigen::Array4f> west(&raw_matrix(i, j_prev));
-      Eigen::Map<Eigen::Array4f> north_west(&raw_matrix(i - 1 + di_nw, j_prev2));
-      Eigen::Map<Eigen::Array4f> scores(&score_cache(i - i0));
-      Eigen::Map<Eigen::Array4f> dest(&raw_matrix(i, j));
-      dest = dp_func(north, west, north_west, scores, gap_penalty);
+      __m128 north = _mm_loadu_ps(&raw_matrix(i - 1, j_prev));
+      __m128 west = _mm_loadu_ps(&raw_matrix(i, j_prev));
+      __m128 north_west = _mm_loadu_ps(&raw_matrix(i - 1 + di_nw, j_prev2));
+      __m128 scores = _mm_loadu_ps(&score_cache(i - i0));
+      __m128 dest = dp_func(north, west, north_west, scores, gap_penalty);
+      _mm_storeu_ps(&raw_matrix(i, j), dest);
     }
     for (; i <= in; i++) {
       raw_matrix(i, j) = dp_func(raw_matrix(i - 1, j_prev), raw_matrix(i, j_prev), raw_matrix(i - 1 + di_nw, j_prev2), score_cache(i - i0), gap_penalty);

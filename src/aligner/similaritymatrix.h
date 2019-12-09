@@ -80,6 +80,8 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
     Eigen::MatrixXf raw_matrix; //column major
     Eigen::Index len_x;
     Eigen::Index len_y;
+    Eigen::Index nrows;
+    Eigen::Index ncols;
     Eigen::ArrayXi sequence_x;
     //Eigen::ArrayXi sequence_y;
     Eigen::ArrayXi inv_sequence_y;

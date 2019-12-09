@@ -255,16 +255,6 @@ const Eigen::MatrixXf &Similarity_Matrix::get_matrix() const {
   return raw_matrix;
 }
 
-int _char2int(char a) {//only process "ATCG"
-  switch (a) {
-    case 'A' : return 0;
-    case 'T' : return 1;
-    case 'C' : return 2;
-    case 'G' : return 3;
-    default: return -1;
-  }
-}
-
 inline Eigen::Index _trueindex2invindex(Eigen::Index ti, Eigen::Index size) {// 1-INDEX based for both input and output
   return size + 1 - ti;
 }
@@ -276,11 +266,13 @@ Similarity_Matrix_Skewed::Similarity_Matrix_Skewed(std::string_view _sequence_x,
       sm_iter_ad_i_times() {//SWITCHING SEQX AND SEQY
   len_x = _sequence_y.size() + 1;//SWITCHING SEQX AND SEQY
   len_y = _sequence_x.size() + 1;//SWITCHING SEQX AND SEQY
-  for (Eigen::Index i = 0; i < len_x - 1; i++) sequence_x(i) = _char2int(_sequence_y[i]);
+  nrows = std::min(len_x, len_y);
+  ncols = std::max(len_x, len_y);
+  for (Eigen::Index i = 0; i < len_x - 1; i++) sequence_x(i) = (int) _sequence_y[i];
   for (Eigen::Index i = 0; i < len_y - 1; i++)
-    inv_sequence_y(_trueindex2invindex(i + 1, len_y - 1) - 1) = _char2int(_sequence_x[i]);
+    inv_sequence_y(_trueindex2invindex(i + 1, len_y - 1) - 1) = (int) _sequence_x[i];
   //std::reverse_copy(sequence_x.begin(), sequence_x.end(), inv_sequence_y.begin());//SWITCHING SEQX AND SEQY
-  raw_matrix = Eigen::MatrixXf(std::min(len_x, len_y), std::max(len_x, len_y));
+  raw_matrix = Eigen::MatrixXf(nrows + (8 - nrows%8)%8, ncols + (8 - ncols%8)%8);//Align start of each column to 256 bits = 8 * sizeof(float)
   raw_matrix.setZero();
 }
 
@@ -333,9 +325,7 @@ index_tuple _rawindex2trueindex(size_t ri, size_t rj, size_t nrows, size_t ncols
 
 index_tuple Similarity_Matrix_Skewed::rawindex2trueindex(index_tuple raw_index) const {
   auto[ri, rj] = raw_index;
-  auto nrows = raw_matrix.rows();
-  auto ncols = raw_matrix.cols();//Always have nrows <= ncols
-  return _rawindex2trueindex(ri, rj, nrows, ncols, len_x, len_y);
+  return _rawindex2trueindex(ri, rj, nrows, ncols, len_x, len_y);//Always have nrows <= ncols
 }
 
 index_tuple _trueindex2rawindex(size_t ti, size_t tj, size_t nrows, size_t ncols, size_t len_x, size_t len_y) {
@@ -353,16 +343,12 @@ index_tuple _trueindex2rawindex(size_t ti, size_t tj, size_t nrows, size_t ncols
 
 index_tuple Similarity_Matrix_Skewed::trueindex2rawindex(index_tuple true_index) const {
   auto[ti, tj] = true_index;
-  auto nrows = raw_matrix.rows();
-  auto ncols = raw_matrix.cols();//Always have nrows <= ncols
-  return _trueindex2rawindex(ti, tj, nrows, ncols, len_x, len_y);
+  return _trueindex2rawindex(ti, tj, nrows, ncols, len_x, len_y);//Always have nrows <= ncols
 }
 
 void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, const char &)> &scoring_function,
                                        float gap_penalty) {
   auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
-  auto nrows = raw_matrix.rows();
-  auto ncols = raw_matrix.cols();//Always have nrows <= ncols
   auto flag = len_x < len_y;
   auto match_score = _mm256_set1_ps(scoring_function('A', 'A'));
   auto mismatch_score = _mm256_set1_ps(scoring_function('A', 'T'));
@@ -381,9 +367,9 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
     auto tj1_inv = _trueindex2invindex(tj1, len_y - 1);//now tj1_inv < tj2_inv
     Eigen::Index i;
     for (i = i0; i <= in - 7; i += 8) {
-      __m256 north = _mm256_loadu_ps(&raw_matrix(i - 1, j - 1));
+      __m256 north = _mm256_load_ps(&raw_matrix(i - 1, j - 1));
       __m256 west = _mm256_loadu_ps(&raw_matrix(i, j - 1));
-      __m256 north_west = _mm256_loadu_ps(&raw_matrix(i - 1, j - 2));
+      __m256 north_west = _mm256_load_ps(&raw_matrix(i - 1, j - 2));
       __m256i seqx = _mm256_loadu_si256((__m256i *) &sequence_x(ti1 - 1 + i - i0));
       __m256i seqy = _mm256_loadu_si256((__m256i *) &inv_sequence_y(tj1_inv - 1 + i - i0));
       __m256 seqmask = _mm256_castsi256_ps(_mm256_cmpeq_epi32(seqx, seqy));//_mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
@@ -413,9 +399,9 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
     if (flag) {//Condition 1: diagonal propagate horizontaly (+y)
       Eigen::Index i;
       for (i = i0; i <= in - 7; i += 8) {
-        __m256 north = _mm256_loadu_ps(&raw_matrix(i - 1, j - 1));
+        __m256 north = _mm256_load_ps(&raw_matrix(i - 1, j - 1));
         __m256 west = _mm256_loadu_ps(&raw_matrix(i, j - 1));
-        __m256 north_west = _mm256_loadu_ps(&raw_matrix(i - 1, j - 2));
+        __m256 north_west = _mm256_load_ps(&raw_matrix(i - 1, j - 2));
         __m256i seqx = _mm256_loadu_si256((__m256i *) &sequence_x(ti1 - 1 + i - i0));
         __m256i seqy = _mm256_loadu_si256((__m256i *) &inv_sequence_y(tj1_inv - 1 + i - i0));
         __m256 seqmask = _mm256_castsi256_ps(_mm256_cmpeq_epi32(seqx, seqy));//_mm256_cvtepi32_ps(_mm256_cmpeq_epi32(seqx, seqy));
@@ -439,7 +425,7 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
       auto di_nw = j == nrows ? 0 : 1;
       Eigen::Index i;
       for (i = i0; i <= in - 7; i += 8) {
-        __m256 north = _mm256_loadu_ps(&raw_matrix(i, j - 1));
+        __m256 north = _mm256_load_ps(&raw_matrix(i, j - 1));
         __m256 west = _mm256_loadu_ps(&raw_matrix(i + 1, j - 1));
         __m256 north_west = _mm256_loadu_ps(&raw_matrix(i + di_nw, j - 2));
         __m256i seqx = _mm256_loadu_si256((__m256i *) &sequence_x(ti1 - 1 + i - i0));

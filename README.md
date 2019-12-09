@@ -162,11 +162,15 @@ bin/omp_sw_solve_small solve_small n_reads n_threads
 ```
 
 ## Benchmarking Specific Usage
-#Fine-grained OMP
+### Fine-grained OMP
 ```bash
 sh benchmark/leonhardsetup.sh
+
+#download chromosome22 of hg19 reference from USCS database
 sh benchmark/data_get_chr22.sh
 
+#Generate a custom reference from a section of the downloaded hg19 chr22 and a set of custom reads
+#Default: |ref|=30k, n_reads=100, |read|=100
 python py/ompfg_data_prep.py  --option gen_ref_custom
 python py/ompfg_data_prep.py  --option gen_reads_custom
 
@@ -177,8 +181,10 @@ cmake .. -DUSEOMP=ON
 make
 cd ..
 
+#Run OMP finegrain Smith-Waterman with different n_threads settings, append times to a csv
 sh benchmark/omp_finegrain_benchmark.sh
 
+#Visualization of numerical results in csv
 module load gcc/4.8.2 python/3.6.1
 python py/eval.py --option ompfg
 ```

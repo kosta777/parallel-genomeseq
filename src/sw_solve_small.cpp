@@ -51,6 +51,7 @@ int main() {
   float score_tmp;
   size_t pos_pred_tmp;
   double time_avg = 0.0;
+  unsigned long long num_cells = 0;
   i = 0;
   while (std::getline(align_input, input_line)) {
     std::vector<std::string> row;
@@ -85,6 +86,7 @@ int main() {
         score_tmp = la->calculateScore();
         pos_pred_tmp = la->getPos();
         time_avg += la->getTimings()[0];
+        num_cells += row[2].size()*fa_string.size();
       }
       align_output << input_line << ", "
                    << pos_pred_tmp << ", "
@@ -97,10 +99,11 @@ int main() {
 
     i++;
   }
+  auto GCUPs = num_cells/time_avg*1e-3;
   time_avg /= i;
   align_input.close();
   align_output.close();
-  std::cout << "Average SW iter_ad_read times: " << time_avg << "us" << std::endl;
+  std::cout << "Average SW iter_ad_read times: " << time_avg << "us, GCUP:" << GCUPs << std::endl;
   std::cout << "Done, output file see: " << output_file_path << std::endl;
 }
 

@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <assert.h>
+#include <chrono>
 
 template<class SMT, class LAT>
 OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view first_sequence, std::string_view second_sequence, int npiece, float overlap_ratio)
@@ -23,7 +24,7 @@ template<class SMT, class LAT>
 OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view first_sequence, std::string_view second_sequence, int npiece, float overlap_ratio,
                                                       std::function<float(const char &, const char &)> &&scoring_function,
                                                       float gap_penalty) :
-    sm_timings(),
+    sm_timings(2),
     pos(0),
     max_score(-1),
     gap_penalty(gap_penalty),
@@ -64,6 +65,7 @@ float OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
   float max_score_l = -1.0;
   int max_score_piece = -1;
   auto string_ranges = _make_string_range(npiece, shortstringlength, longstringlength, overlap_ratio);
+  auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
 #ifdef USEOMP
   #pragma omp parallel for default(none) shared(string_ranges, shortstringlength, longstringlength, max_score_l, max_score_piece, \
                                                 overlap_ratio, sequence_x, sequence_y, scoring_function, gap_penalty)
@@ -81,6 +83,8 @@ float OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
       }
     }
   }
+  auto iter_ad_read_end = std::chrono::high_resolution_clock::now();//OVERESTIMATE TIME
+  auto read_duration = (float) std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end - iter_ad_read_start).count();
   max_score = max_score_l;
   auto [left, right] = string_ranges[max_score_piece];
   {
@@ -88,7 +92,7 @@ float OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
     auto la = std::make_unique<LAT>(sequence_x, sequence_y_i);
     la -> calculateScore();
     pos = la -> getPos() + left;
-    sm_timings = la -> getTimings();
+    sm_timings[0] = la -> getTimings()[0] + read_duration;
     consensus_x = la -> getConsensus_x();
     consensus_y = la -> getConsensus_y();
   }

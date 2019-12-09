@@ -50,21 +50,17 @@ TEST(SimilarityMatrix, SkewedMatrixDP) {
   normal.iterate(scoring_function, 2.0);
   skewed2.iterate(scoring_function, 2.0);
   normal2.iterate(scoring_function, 2.0);
-  auto skewed_mat = skewed.get_matrix();
-  auto normal_mat = normal.get_matrix();
-  auto skewed2_mat = skewed2.get_matrix();
-  auto normal2_mat = normal2.get_matrix();
-  for (size_t j = 0; j < len_y; j++) {
-    for (size_t i = 0; i < len_x; i++) {
-      //auto [ri, rj] = skewed.trueindex2rawindex(index_tuple(i, j));
-      //auto [rj2, ri2] = skewed2.trueindex2rawindex(index_tuple(j, i));
-      ASSERT_EQ(normal_mat(i, j), skewed(i, j));
-      ASSERT_EQ(normal2_mat(j, i), skewed2(j, i));
-    }
-  }
 #ifdef VERBOSE
   std::cout << "Similarity_Matrix result:\n" << normal.get_matrix() << std::endl;
   std::cout << "Similarity_Matrix_Skewed result:\n" ;
   skewed.print_matrix();
 #endif
+  for (size_t j = 0; j < len_y; j++) {
+    for (size_t i = 0; i < len_x; i++) {
+      //auto [ri, rj] = skewed.trueindex2rawindex(index_tuple(i, j));
+      //auto [rj2, ri2] = skewed2.trueindex2rawindex(index_tuple(j, i));
+      ASSERT_EQ(normal(i, j), skewed(i, j));
+      ASSERT_EQ(normal2(j, i), skewed2(j, i));
+    }
+  }
 }

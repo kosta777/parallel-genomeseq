@@ -178,5 +178,7 @@ make
 cd ..
 
 sh benchmark/omp_finegrain_benchmark.sh
+
+module load gcc/4.8.2 python/3.6.1
 python py/eval.py --option ompfg
 ```

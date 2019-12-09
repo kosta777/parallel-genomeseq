@@ -5,17 +5,24 @@ from os.path import dirname, abspath, join as pjoin
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
+import argparse
 
-cwd = dirname(abspath(__file__))
-project_dir = pjoin(cwd,"..")
+thisfile_dir = dirname(abspath(__file__))
+project_dir = pjoin(thisfile_dir,"..")
 
-timing1_path = pjoin(project_dir,"data/timings/timing_20191122_1650_ompfg_oxtest.csv")
+timing1_path = pjoin(project_dir,"data/timings/ompfg_timing_results.csv")
 
 if __name__ == '__main__':
-    if sys.argv[1] == "hello":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o','--option',default='hello')
+    args = parser.parse_args()
+    argsdict = vars(args)
+    print(argsdict)
+
+    if argsdict['option'] == "hello":
         print("hello")
 
-    elif sys.argv[1] == "timing1":
+    elif argsdict['option'] == "ompfg":
 
         def poly_fit(x,w0,w1,w2):
             return(w0+w1*x+w2*(x**2))
@@ -60,14 +67,13 @@ if __name__ == '__main__':
         plt.show()
 
 
+    elif argsdict['option'] == "sw_solve_small":
+        parser.add_argument('-aln','--align_file',default="data/align_output.csv")
+        args = parser.parse_args()
+        argsdict = vars(args)
+        print(argsdict)
 
-
-
-    elif sys.argv[1] == "sw_solve_small":
-        if len(sys.argv)<3:
-            align_output_file = "../data/align_output.csv"
-        else:
-            align_output_file = sys.argv[2]
+        align_output_file = pjoin(project_dir,argsdict['align_file'])
 
         df_ao = pd.read_csv(align_output_file)
         df_ao = df_ao.set_index('index')

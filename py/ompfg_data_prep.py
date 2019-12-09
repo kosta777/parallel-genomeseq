@@ -14,9 +14,8 @@ long_fa = pjoin(project_dir,"data/chr22.fa") #reference genome
 
 if __name__ == '__main__':
 
-    print("test1")
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o','--option',default='test1')
+    parser.add_argument('-o','--option',default='hello')
     args = parser.parse_args()
     argsdict = vars(args)
     print(argsdict)

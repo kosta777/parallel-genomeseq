@@ -3,8 +3,12 @@
 
 #include <Eigen/Dense>
 #include <string_view>
+#include <iostream>
 
 typedef std::pair<Eigen::Index, Eigen::Index> index_tuple;
+typedef Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> MatrixX8u;
+typedef Eigen::Array<uint8_t, Eigen::Dynamic, 1, Eigen::ColMajor> ArrayX8u;
+typedef Eigen::Array<int8_t, Eigen::Dynamic, 1, Eigen::ColMajor> ArrayX8i;
 
 class Abstract_Similarity_Matrix{
   public:
@@ -15,7 +19,6 @@ class Abstract_Similarity_Matrix{
                          float gap_penalty) = 0;
     virtual std::tuple<Eigen::Index, Eigen::Index, float> find_index_of_maximum() const = 0;
     virtual void print_matrix() const = 0;
-    virtual const Eigen::MatrixXf &get_matrix() const = 0;
     virtual float operator()(Eigen::Index row, Eigen::Index col) const = 0;
     virtual Eigen::VectorXf getTimings() const = 0;
 };
@@ -38,7 +41,7 @@ class Similarity_Matrix : public Abstract_Similarity_Matrix{
                         float gap_penalty);
     std::tuple<Eigen::Index, Eigen::Index, float> find_index_of_maximum() const override;
     void print_matrix() const override;
-    const Eigen::MatrixXf &get_matrix() const override;
+    const Eigen::MatrixXf &get_matrix() const;
     float operator()(Eigen::Index row, Eigen::Index col) const override { return raw_matrix(row, col); };
     Eigen::VectorXf getTimings() const override;
 #ifdef USEOMP
@@ -62,7 +65,8 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
                  float gap_penalty) override;
     std::tuple<Eigen::Index, Eigen::Index, float> find_index_of_maximum() const override;
     void print_matrix() const override;
-    const Eigen::MatrixXf &get_matrix() const override { return raw_matrix; };
+    virtual void print_matrix_raw() const;
+    const MatrixX8u &get_matrix() const { return raw_matrix; };
     Eigen::VectorXf getTimings() const override;
     index_tuple rawindex2trueindex(index_tuple raw_index) const;
     index_tuple trueindex2rawindex(index_tuple true_index) const;
@@ -75,16 +79,15 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
     int sm_finegrain_type;
 #endif
 
-
   private:
-    Eigen::MatrixXf raw_matrix; //column major
+    MatrixX8u raw_matrix; //column major
     Eigen::Index len_x;
     Eigen::Index len_y;
     Eigen::Index nrows;
     Eigen::Index ncols;
-    Eigen::ArrayXi sequence_x;
+    ArrayX8u sequence_x;
     //Eigen::ArrayXi sequence_y;
-    Eigen::ArrayXi inv_sequence_y;
+    ArrayX8u inv_sequence_y;
     float sm_iter_ad_read_time;  //anti-diagonal
     Eigen::VectorXf sm_iter_ad_i_times;  //anti-diagonal
 

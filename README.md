@@ -182,7 +182,14 @@ sh benchmark/data_get_chr22.sh
 #Generate a custom reference from a section of the downloaded hg19 chr22 and a set of custom reads
 #Default: |ref|=30k, n_reads=100, |read|=100
 python py/ompfg_data_prep.py  --option gen_ref_custom
+#Reference default output: data/custom_ref_1.fa
 python py/ompfg_data_prep.py  --option gen_reads_custom
+#Reference default input: data/custom_ref_1.fa
+#Reads default output: data/custom_reads_1.csv
+
+#examples:
+python py/ompfg_data_prep.py  --option gen_ref_custom --start_pos 0 --ref_len 50000000 --remove_N=true
+python py/ompfg_data_prep.py  --option gen_reads_custom --read_len=? --n_reads=?
 
 rm -rf build
 mkdir build

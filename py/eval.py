@@ -14,7 +14,10 @@ timing1_path = pjoin(project_dir,"data/timings/ompfg_timing_results.csv")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o','--option',default='hello')
+    parser.add_argument('-o','--option',default='hello') #ompfg
+    parser.add_argument('-y','--yaxis',default='abs_time') #abs_time, normed_time
+    parser.add_argument('-p','--plot_type',default='box_plot') #box_plot, scatter
+    parser.add_argument('-f','--fit',default='false') #true
     args = parser.parse_args()
     argsdict = vars(args)
     print(argsdict)
@@ -29,30 +32,44 @@ if __name__ == '__main__':
 
         df = pd.read_csv(timing1_path)
         df_colnames = list(df.keys())
-#        t1_key = df_colnames[3]
         t2_key = df_colnames[4]
 
-#        x_data = np.log10(df['n_threads'].values)
         x_data = df['n_threads'].values
 
-#        t1 = (df[t1_key].values)/(1E6)
-#        t2 = (df[t2_key].values)/(1E6)
-#        t1 = (df[t1_key].values)/( (df[df['n_threads']==1][t1_key]).mean())
-        t2 = (df[t2_key].values)/( (df[df['n_threads']==1][t2_key]).mean())
-
-        w_opt,w_cov = curve_fit(poly_fit,np.log10(x_data),t2)
-        x_fit = np.linspace(np.log10(np.min(x_data)),np.log10(np.max(x_data)),1000)
-        x_fit_plot = 10**x_fit
-        t_fit = poly_fit(x_fit,*w_opt)
-
         f1 = plt.figure()
-#        ax1 = f1.add_subplot(111)
-        ax1 = f1.add_subplot(111,xscale="log")
+#        ax1 = f1.add_subplot(111,xscale="log")
+        ax1 = f1.add_subplot(111)
 
-#        ax1.scatter(x_data,t1,s=10.0)
-        ax1.scatter(x_data,t2,s=10.0)
+        if argsdict['yaxis'] == "abs_time":
+            df['y'] = (df[t2_key].values)/(1E6)
+            ylabel_txt = "Abs Construction Time (s)"
+        elif argsdict['yaxis'] == "normed_time":
+            seq_mean = (df[df['n_threads']==1][t2_key]).mean()
+            df['y'] = (df[t2_key].values)/seq_mean
+            ylabel_txt = "Normalized Construction Time"
+        elif argsdict['yaxis'] == "speedup":
+            seq_mean = (df[df['n_threads']==1][t2_key]).mean()
+            df['y'] = seq_mean/(df[t2_key].values)
+        elif argsdict['yaxis'] == "gcups":
+            gc = (1E4)*(3E4)/(1E9)
+            df['y'] = gc/(df[t2_key].values)
+            ylabel_txt = "GCUPS (nb: gc=0.3 fixed)"
 
-        ax1.plot(x_fit_plot,t_fit,linewidth=1.0,color="red")
+        if argsdict['plot_type'] == "scatter":
+            x_data = np.log2(x_data)
+            ax1.scatter(x_data,df['y'].values,s=10.0)
+        elif argsdict['plot_type'] == "box_plot":
+            x_data_unique = np.unique(df['n_threads'].values)
+            bp_data = [df[df['n_threads']==x]['y'].values for x in x_data_unique]
+            flier_settings = dict(markersize=3.5, markerfacecolor='g', marker='D' )
+#            ax1.boxplot(x=bp_data,positions=np.log2(x_data_unique),widths=0.15,flierprops=flier_settings)
+            ax1.boxplot(x=bp_data,positions=np.log2(x_data_unique),widths=0.15,showfliers=False)
+
+        if argsdict['fit'] == 'true':
+            w_opt,w_cov = curve_fit(poly_fit,np.log2(x_data),df['y'].values)
+            x_fit = np.linspace(np.log2(np.min(x_data)),np.log2(np.max(x_data)),1000)
+            t_fit = poly_fit(x_fit,*w_opt)
+            ax1.plot(x_fit,t_fit,linewidth=1.0,color="red")
 
         ax1.minorticks_on()
         ax1.grid(which='major',linestyle='-',linewidth=0.5)
@@ -60,10 +77,11 @@ if __name__ == '__main__':
 
         ax1.set_title("OMP parallelization of anti-diagonal DP matrix construction (fine grain)")
         ax1.set_xlabel(r"$N_{threads}$")
-        ax1.set_xticks(2**(np.arange(0,7)))
+#        ax1.set_xticks(2**(np.arange(0,7)))
+        ax1.set_xticks(np.arange(0,7))
         ax1.set_xticklabels(2**(np.arange(0,7)))
-        ax1.set_ylabel("Normalized Construction Time") #10k* 30k D
 
+        ax1.set_ylabel(ylabel_txt) #10k* 30k D
         plt.show()
 
 

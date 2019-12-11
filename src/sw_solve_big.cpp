@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   } else {
     npiece = std::stoi(argv[1]);
 //#pragma omp parallel default(none) shared(npiece, std::cout)
-    //std::cout << "npiece: " << npiece << ", nthreads: " << omp_get_num_threads() << std::endl;
+    std::cout << "[INFO] npiece: " << npiece << std::endl;//<< ", nthreads: " << omp_get_num_threads() << std::endl;
   }
 #endif
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     if (i > 0) {
       {
         auto matsize = row[2].size()*fa_string.size();
-        if (i == 1) std::cout << "Estimated Memory consumption " << (double)(matsize*sizeof(uint8_t))*1e-9 << "GB" << std::endl;
+        if (i == 1) std::cout << "[INFO] Estimated Memory consumption " << (double)(matsize*sizeof(uint8_t))*1e-9 << "GB" << std::endl;
         //std::cout << "progress: " << i << std::endl;
 #ifdef USEOMP
         auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,npiece,2.0);
@@ -82,7 +82,8 @@ int main(int argc, char **argv) {
   time_avg /= (i - 1);
   Eigen::Map<Eigen::ArrayXd> GCUPS_arr(&GCUPS_vec[0],i - 1);
   align_input.close();
-  std::cout << "Average SW iter_ad_read times: " << time_avg*1e-6 << "s, GCUPS:" << GCUPS << std::endl;
-  std::cout << "GCUPS avg:" << GCUPS_arr.mean() << "GCUPS std:" << sqrt((GCUPS_arr - GCUPS_arr.mean()).square().mean()) << std::endl;
+  std::cout << "[INFO] Average SW iter_ad_read times: " << time_avg*1e-6 << "s, GCUPS:" << GCUPS << std::endl;
+  std::cout << "[INFO] GCUPS avg:" << GCUPS_arr.mean() << "GCUPS std:" << sqrt((GCUPS_arr - GCUPS_arr.mean()).square().mean()) << std::endl;
+  std::cout << GCUPS_arr.transpose() << std::endl;
 }
 

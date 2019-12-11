@@ -94,9 +94,8 @@ float OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
   auto shortstringlength = sequence_x.size();
   auto longstringlength = sequence_y.size();
   float max_score_l = -1.0;
-  int max_score_piece = -1;
+  int max_score_piece = 0;
   auto string_ranges = _make_string_range(npiece, shortstringlength, longstringlength, overlap_ratio);
-
   {
     std::vector<std::unique_ptr<SMT>> smptr_vec;
     for (int i = 0; i < npiece; i++) {
@@ -108,28 +107,30 @@ float OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
 
     auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
 #ifdef USEOMP
-#pragma omp parallel for default(none) shared(max_score_l, max_score_piece, scoring_function, gap_penalty, smptr_vec)
+#pragma omp parallel for default(none) shared(npiece, max_score_l, max_score_piece, scoring_function, gap_penalty, smptr_vec) num_threads(npiece)
 #endif
     for (int i = 0; i < npiece; i++) {
       smptr_vec[i]->iterate(scoring_function, gap_penalty);
+    }
+    auto iter_ad_read_end = std::chrono::high_resolution_clock::now();//OVERESTIMATE TIME
+    sm_timings[0] = (float) std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end - iter_ad_read_start).count();
+
+    for (int i = 0; i < npiece; i++) {
       auto[x, y, max] = smptr_vec[i]->find_index_of_maximum();
       if (max > max_score_l) {
         max_score_l = max;
         max_score_piece = i;
       }
     }
-    auto iter_ad_read_end = std::chrono::high_resolution_clock::now();//OVERESTIMATE TIME
-    sm_timings[0] =
-        (float) std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end - iter_ad_read_start).count();
   }
 
-  max_score = max_score_l;
   auto[left, right] = string_ranges[max_score_piece];
   {
     std::string_view sequence_y_i = sequence_y.substr(left, right - left);
     auto la = std::make_unique<LAT>(sequence_x, sequence_y_i);
     la->calculateScore();
     pos = la->getPos() + left;
+    max_score = la->getScore();
     consensus_x = la->getConsensus_x();
     consensus_y = la->getConsensus_y();
   }

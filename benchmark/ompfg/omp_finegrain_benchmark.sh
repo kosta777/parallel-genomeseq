@@ -9,7 +9,7 @@ n_reads="10"
 
 finegrain_type="1"
 #timing_file_path=$project_dir"/data/timings/timing_ompfg_0612.csv"
-timing_file_path=$project_dir"/data/timings/ompfg_timing_results.csv"
+timing_file_path=$project_dir"/data/timings/ompfg_timing_results_1112.csv"
 ref_file_path=$project_dir"/data/custom_ref_1.fa"
 reads_file_path=$project_dir"/data/custom_reads_1.csv"
 

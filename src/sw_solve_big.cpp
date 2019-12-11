@@ -79,10 +79,10 @@ int main(int argc, char **argv) {
     i++;
   }
   auto GCUPS = num_cells/time_avg*1e-3;
-  time_avg /= i;
-  Eigen::Map<Eigen::ArrayXd> GCUPS_arr(&GCUPS_vec[0],i);
+  time_avg /= (i - 1);
+  Eigen::Map<Eigen::ArrayXd> GCUPS_arr(&GCUPS_vec[0],i - 1);
   align_input.close();
-  std::cout << "Average SW iter_ad_read times: " << time_avg << "us, GCUPS:" << GCUPS << std::endl;
+  std::cout << "Average SW iter_ad_read times: " << time_avg*1e-6 << "s, GCUPS:" << GCUPS << std::endl;
   std::cout << "GCUPS avg:" << GCUPS_arr.mean() << "GCUPS std:" << sqrt((GCUPS_arr - GCUPS_arr.mean()).square().mean()) << std::endl;
 }
 

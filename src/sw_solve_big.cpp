@@ -11,15 +11,17 @@
 #endif
 
 int main(int argc, char **argv) {
+  int nrepeat = 1;
 #ifdef USEOMP
   int npiece;
-  if (argc < 2) {
-    std::cout << "Please specify number of pieces to break e.g: `sw_solve_big 16`" <<std::endl;
+  if (argc < 3) {
+    std::cout << "Please specify number of pieces to break e.g: `sw_solve_big <npiece> <nrepeat>`" <<std::endl;
     return -1;
   } else {
     npiece = std::stoi(argv[1]);
+    nrepeat = std::stoi(argv[2]);
 //#pragma omp parallel default(none) shared(npiece, std::cout)
-    std::cout << "[INFO] npiece: " << npiece << std::endl;//<< ", nthreads: " << omp_get_num_threads() << std::endl;
+    std::cout << "[INFO] npiece: " << npiece << ", nrepeat:" << nrepeat << std::endl;//<< ", nthreads: " << omp_get_num_threads() << std::endl;
   }
 #endif
 
@@ -68,10 +70,14 @@ int main(int argc, char **argv) {
 #else
         auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
 #endif
-        la->calculateScore();
-        auto time = la->getTimings()[0];
-        time_avg += time;
-        GCUPS_vec.emplace_back(matsize/time*1e-3);
+        auto time_min = 9e20;
+        for (auto j = 0; j < nrepeat; j++) {
+          la->calculateScore();
+          time_min = std::min(time_min, (double) (la->getTimings()[0]));
+        }
+
+        time_avg += time_min;
+        GCUPS_vec.emplace_back(matsize/time_min*1e-3);
         num_cells += matsize;
       }
     }

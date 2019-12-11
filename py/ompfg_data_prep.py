@@ -16,31 +16,28 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-o','--option',default='hello')
+
+    parser.add_argument('-sp','--start_pos', default=300000 * 60)
+    parser.add_argument('-rfl','--ref_len', default = 30 * 1000)
+    parser.add_argument('-o1','--output_ref_path',default = "data/custom_ref_1.fa")
+    parser.add_argument('-rmN', '--remove_N',default='true')
+
+    parser.add_argument('-rdl','--read_len', default = 10000)
+    parser.add_argument('-nr','--n_reads', default = 100)
+    parser.add_argument('-in','--input_ref_path',default = "data/custom_ref_1.fa")
+    parser.add_argument('-o2','--output_reads_path',default = "data/custom_reads_1.csv")
+
     args = parser.parse_args()
     argsdict = vars(args)
     print(argsdict)
    
-    if argsdict['option'] == 'test1':
-        print("test1")
-        parser.add_argument('-t1','--test2',default='fallback2')
-        args = parser.parse_args()
-        argsdict = vars(args)
-        print(argsdict)
-
-    elif argsdict['option'] == 'gen_ref_custom':
+    if argsdict['option'] == 'gen_ref_custom':
 #        test_start_pos = 300000 * 60
 #        custom_ref_len = 30 * 1000
 #        output_ref_path = "data/test_fa_custom1.fa"
 
-        parser.add_argument('-sp','--start_pos', default=300000 * 60)
-        parser.add_argument('-rfl','--ref_len', default = 30 * 1000)
-        parser.add_argument('-out','--output_ref_path',default = "data/custom_ref_1.fa")
-        args = parser.parse_args()
-        argsdict = vars(args)
-        print(argsdict)
-
-        test_start_pos = argsdict['start_pos']
-        custom_ref_len = argsdict['ref_len']
+        test_start_pos = int(argsdict['start_pos'])
+        custom_ref_len = int(argsdict['ref_len'])
         output_ref_path = pjoin(project_dir,argsdict['output_ref_path'])
 
         alphabet = ['A','C','G','T','N']
@@ -59,7 +56,11 @@ if __name__ == '__main__':
                     line_str=(fa_line.split("\n")[0]).upper()
                     nts_in_line = len(line_str)
                     if nt_idx >= test_start_pos and nt_idx < test_start_pos+custom_ref_len:
-                        custom_ref_str+=line_str
+                        if argsdict['remove_N']=='true':
+                            line_str_tmp = line_str.replace('N','')
+                            custom_ref_str+=line_str_tmp
+                        else:
+                            custom_ref_str+=line_str
                         new_fa_file.write(line_str)
                     if line_idx%10000==0 or line_idx<10:
                         print("line_idx=%d: "%(line_idx)+line_str)
@@ -80,16 +81,8 @@ if __name__ == '__main__':
 #        input_ref_path = "data/test_fa_custom1.fa"
 #        output_reads_path = "data/ground_truth_custom10k.csv"
 
-        parser.add_argument('-rdl','--read_len', default = 10000)
-        parser.add_argument('-nr','--n_reads', default = 100)
-        parser.add_argument('-in','--input_ref_path',default = "data/custom_ref_1.fa")
-        parser.add_argument('-out','--output_reads_path',default = "data/custom_reads_1.csv")
-        args = parser.parse_args()
-        argsdict = vars(args)
-        print(argsdict)
-
-        custom_read_len = argsdict['read_len']
-        n_reads_to_gen = argsdict['n_reads']
+        custom_read_len = int(argsdict['read_len'])
+        n_reads_to_gen = int(argsdict['n_reads'])
         input_ref_path = argsdict['input_ref_path']
         output_reads_path = argsdict['output_reads_path']
         output_readsonly_path = output_reads_path.split(".")[0]+"_readsonly.txt" 

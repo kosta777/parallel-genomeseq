@@ -24,8 +24,8 @@ class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Ty
     int npiece; // number of pieces that sequence_y is broken into
     std::string consensus_x;
     std::string consensus_y;
-    std::string sequence_x;
-    std::string sequence_y;
+    std::string_view sequence_x;
+    std::string_view sequence_y;
     std::function<float(const char &, const char &)> scoring_function;
 };
 

@@ -44,8 +44,8 @@ class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
     unsigned int pos;
     float max_score;
     float gap_penalty;
-    std::string sequence_x;
-    std::string sequence_y;
+    std::string_view sequence_x;
+    std::string_view sequence_y;
     /*
      * Portions of sequences x and y found by the algorithm as best match.
      * In reverse order. Gaps are denoted by a dash symbol "-".

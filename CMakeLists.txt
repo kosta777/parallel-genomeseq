@@ -75,6 +75,9 @@ target_link_libraries(bwt_fm PRIVATE libaligner)
 add_executable(sw_solve_small src/sw_solve_small.cpp)
 target_link_libraries(sw_solve_small PRIVATE libaligner)
 
+add_executable(sw_solve_big src/sw_solve_big.cpp)
+target_link_libraries(sw_solve_big PRIVATE libaligner)
+
 add_executable(mpi_sw_solve_small src/mpi_sw_solve_small.cpp)
 target_link_libraries(mpi_sw_solve_small PRIVATE libaligner)
 
@@ -105,6 +108,7 @@ if (USEOMP)
   target_link_libraries(${TARGET_NAME} PUBLIC OpenMP::OpenMP_CXX)
   target_link_libraries(libaligner PUBLIC OpenMP::OpenMP_CXX)
   target_link_libraries(sw_solve_small PUBLIC OpenMP::OpenMP_CXX)
+  target_link_libraries(sw_solve_big PUBLIC OpenMP::OpenMP_CXX)
   target_link_libraries(tests PUBLIC OpenMP::OpenMP_CXX)
 endif ()
 

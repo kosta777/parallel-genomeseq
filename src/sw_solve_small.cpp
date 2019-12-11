@@ -79,7 +79,7 @@ int main() {
 #endif
       {
 #ifdef USEOMP
-        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,4,2.0);
+        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,17,2.0);
 #else
         auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
 #endif

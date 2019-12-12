@@ -90,7 +90,7 @@ OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view firs
   consensus_x.reserve(sequence_x.size());
   consensus_y.reserve(sequence_x.size());
 #ifdef USEOMP
-#pragma omp parallel for default(none) shared(npiece,sequence_x, sequence_y, smptr_vec) num_threads(npiece)
+#pragma omp parallel for default(none) shared(npiece,sequence_x, sequence_y, smptr_vec) num_threads(npiece) schedule(static, 1)
 #endif
   for (int i = 0; i < npiece; i++) {
     Eigen::Index left = string_ranges[i].first;
@@ -108,23 +108,26 @@ float OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
   int max_score_piece = 0;
     auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
 #ifdef USEOMP
-#pragma omp parallel for default(none) shared(npiece, max_score_l, max_score_piece, scoring_function, gap_penalty, smptr_vec) num_threads(npiece)
+#pragma omp parallel for default(none) shared(npiece, max_score_l, max_score_piece, scoring_function, gap_penalty, smptr_vec) num_threads(npiece) schedule(static,1)
 #endif
     for (int i = 0; i < npiece; i++) {
       smptr_vec[i]->iterate(scoring_function, gap_penalty);
     }
     auto iter_ad_read_end = std::chrono::high_resolution_clock::now();//OVERESTIMATE TIME
     sm_timings[0] = (float) std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end - iter_ad_read_start).count();
+    double time_iter = 0.0;
 #ifdef USEOMP
-#pragma omp parallel for default(none) shared(npiece, max_score_l, max_score_piece, smptr_vec) num_threads(npiece)
+#pragma omp parallel for default(none) shared(npiece, max_score_l, max_score_piece, smptr_vec, time_iter) num_threads(npiece) schedule(static, 1)
 #endif
     for (int i = 0; i < npiece; i++) {
       auto[x, y, max] = smptr_vec[i]->find_index_of_maximum();
+      time_iter += smptr_vec[i]->getTimings()[0];
       if (max > max_score_l) {
         max_score_l = max;
         max_score_piece = i;
       }
     }
+  sm_timings[1] = time_iter;
 
   auto[left, right] = string_ranges[max_score_piece];
   {

@@ -1,3 +1,5 @@
+#define EIGEN_NO_DEBUG //SUPRESS EIGEN ASSERTION: causing LLC missing
+#define EIGEN_DONT_PARALLELIZE
 #include "similaritymatrix.h"
 #include <iostream>
 #include <algorithm>

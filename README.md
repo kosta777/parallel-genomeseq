@@ -177,7 +177,7 @@ bin/omp_sw_solve_small solve_small n_reads n_threads
 sh benchmark/leonhardsetup.sh
 
 #download chromosome22 of hg19 reference from USCS database
-sh benchmark/data_get_chr22.sh
+sh benchmark/ompfg/data_get_chr22.sh
 
 #Generate a custom reference from a section of the downloaded hg19 chr22 and a set of custom reads
 #Default: |ref|=30k, n_reads=100, |read|=100

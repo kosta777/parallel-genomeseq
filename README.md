@@ -179,6 +179,7 @@ sh benchmark/leonhardsetup.sh
 #download chromosome22 of hg19 reference from USCS database
 sh benchmark/ompfg/data_get_chr22.sh
 
+module load gcc/4.8.2 python/3.6.1
 #Generate a custom reference from a section of the downloaded hg19 chr22 and a set of custom reads
 #Default: |ref|=30k, n_reads=100, |read|=100
 python py/ompfg_data_prep.py  --option gen_ref_custom
@@ -199,6 +200,8 @@ make
 cd ..
 
 #Run OMP finegrain Smith-Waterman with different n_threads settings, append times to a csv
+#arguments to the following command are specified in the sh file. Check for correctness if necessary
+#cmd=$project_dir"/bin/omp_sw_solve_small "$code_section" "$n_reads" "$n_threads" "$finegrain_type" "$timing_file_path" "$ref_file_path" "$reads_file_path" "$mt_simd
 sh benchmark/omp_finegrain_benchmark.sh
 
 #Visualization of numerical results in csv

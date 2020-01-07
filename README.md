@@ -211,9 +211,9 @@ cd ..
 #cmd=$project_dir"/bin/omp_sw_solve_small "$code_section" "$n_reads" "$n_threads" "$finegrain_type" "$timing_file_path" "$ref_file_path" "$reads_file_path" "$mt_simd
 
 #Original ompfg benchmark
-sh benchmark/ompfg_bench.sh
+sh benchmark/ompfg/ompfg_bench.sh
 #ompfg with multithreaded SIMD benchmark
-sh benchmark/ompfg_mtsimd_bench.sh
+sh benchmark/ompfg/ompfg_mtsimd_bench.sh
 
 #Visualization of numerical results in csv
 module load gcc/4.8.2 python/3.6.1

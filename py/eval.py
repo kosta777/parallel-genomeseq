@@ -26,13 +26,13 @@ if __name__ == '__main__':
         print("hello")
 
     elif argsdict['option'] == "ompfg":
+        t2_key = "avg_t_adread"
 
         def poly_fit(x,w0,w1,w2):
             return(w0+w1*x+w2*(x**2))
 
         df = pd.read_csv(timing1_path)
         df_colnames = list(df.keys())
-        t2_key = df_colnames[4]
 
         x_data = df['n_threads'].values
 

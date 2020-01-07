@@ -72,6 +72,8 @@ int main(int argc, char **argv) {
   std::string arg_ref_file_path = argv[6];
   std::string arg_reads_file_path = argv[7];
 
+  int mtsimd_type = -1;
+
   if (argv1 == "0") {
     std::cout << "Hello omp" << std::endl;
 #pragma omp parallel for default(none) num_threads(3)
@@ -162,12 +164,12 @@ int main(int argc, char **argv) {
         {
 #ifdef MTSIMD
           auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
-	  la->sw_finegrain_type = -1;
+//          auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(fa_string, row[2]);
+	  std::cout<<"string sizes(ref, read): "<<fa_string.size()<<", "<<row[2].size()<<std::endl;
 #else
           auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2], fa_string);
-	  la->sw_finegrain_type = arg_finegrain_type;
 #endif
-
+	  la->sw_finegrain_type = arg_finegrain_type;
 	  la->sw_nthreads = arg_nthreads;
           auto start = std::chrono::high_resolution_clock::now();
           score_tmp = la->calculateScore();
@@ -176,6 +178,8 @@ int main(int argc, char **argv) {
           float duration_val = duration.count();
 	  
 	  std::cout<<"MT SIMD status code: "<<la->sw_mt_simd<<std::endl;
+          mtsimd_type = la->sw_mt_simd;
+
           std::cout << "i:" << i << ", dur_val:" << duration_val << std::endl;
           calculateScore_times(i - 1) = duration_val;
 
@@ -228,13 +232,13 @@ int main(int argc, char **argv) {
     float arg_nreads_float = (float) arg_nreads;
     float arg_nthreads_float = (float) arg_nthreads;
     float arg_finegrain_type_float = (float) arg_finegrain_type;
+    float mtsimd_type_float = (float) mtsimd_type;
     if (timing_file_exist.good() != 1){
 //      header_tmp = {"n_reads","n_threads","time1","time2"};
-      header_tmp = {"n_reads","n_threads","finegrain_type","avg_t_calcscore","avg_t_adread","avg_t_adisum"};
+      header_tmp = {"n_reads","n_threads","finegrain_type","mtsimd_type","avg_t_calcscore","avg_t_adread","avg_t_adisum"};
       timing_writer.addDatainRow(header_tmp.begin(),header_tmp.end(),0);
     }
-//    row_tmp = {arg_nreads_float, arg_nthreads_float, 
-    row_tmp = {arg_nreads_float, arg_nthreads_float, arg_finegrain_type_float,
+    row_tmp = {arg_nreads_float, arg_nthreads_float, arg_finegrain_type_float, mtsimd_type_float,
 	    calculateScore_times.mean(), read_sm_iterate_times.mean(), adsum_sm_iterate_times.mean()};
     timing_writer.addDatainRow(row_tmp.begin(),row_tmp.end(),1);
 

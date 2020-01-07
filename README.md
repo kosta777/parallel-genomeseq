@@ -195,14 +195,25 @@ python py/ompfg_data_prep.py  --option gen_reads_custom --read_len=? --n_reads=?
 rm -rf build
 mkdir build
 cd build
+module load gcc
+module load cmake
+
+#Original ompfg benchmark
 cmake .. -DUSEOMP=ON
+#ompfg with multithreaded SIMD benchmark
+cmake .. -DUSEOMP=ON -DMTSIMD=ON
+
 make
 cd ..
 
 #Run OMP finegrain Smith-Waterman with different n_threads settings, append times to a csv
 #arguments to the following command are specified in the sh file. Check for correctness if necessary
 #cmd=$project_dir"/bin/omp_sw_solve_small "$code_section" "$n_reads" "$n_threads" "$finegrain_type" "$timing_file_path" "$ref_file_path" "$reads_file_path" "$mt_simd
-sh benchmark/omp_finegrain_benchmark.sh
+
+#Original ompfg benchmark
+sh benchmark/ompfg_bench.sh
+#ompfg with multithreaded SIMD benchmark
+sh benchmark/ompfg_mtsimd_bench.sh
 
 #Visualization of numerical results in csv
 module load gcc/4.8.2 python/3.6.1

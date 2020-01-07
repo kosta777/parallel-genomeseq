@@ -445,6 +445,11 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
     auto tj1_inv = _trueindex2invindex(tj1, len_y - 1);//now tj1_inv < tj2_inv
     if (flag) {//Condition 1: diagonal propagate horizontaly (+y)
       Eigen::Index i;
+#ifdef MTSIMD
+//      std::cout<<"sm_mt_simd activate: h propa "<<std::endl;
+      sm_mt_simd = 666;
+      #pragma omp parallel for default(none) private(i0,in,j,ti1,tj1_inv,match_score,zero_score,mismatch_score,gap_penalty_vec) schedule(static)
+#endif
       for (i = i0; i <= in - (N_PACK - 1); i += N_PACK) {
         __m256i north = _mm256_loadu_si256((__m256i *)&raw_matrix(i - 1, j - 1));
         __m256i west = _mm256_loadu_si256((__m256i *)&raw_matrix(i, j - 1));
@@ -476,6 +481,11 @@ void Similarity_Matrix_Skewed::iterate(const std::function<float(const char &, c
     } else {//Condition 2: diagonal propagate vertically (+x)
       auto di_nw = j == nrows ? 0 : 1;
       Eigen::Index i;
+#ifdef MTSIMD
+//      std::cout<<"sm_mt_simd activate: v propa "<<std::endl;
+      sm_mt_simd = 667;
+      #pragma omp parallel for default(none) private(i0,in,j,ti1,tj1_inv,match_score,zero_score,mismatch_score,gap_penalty_vec, di_nw) schedule(static)
+#endif
       for (i = i0; i <= in - (N_PACK - 1); i += N_PACK) {
         __m256i north = _mm256_loadu_si256((__m256i *)&raw_matrix(i, j - 1));
         __m256i west = _mm256_loadu_si256((__m256i *)&raw_matrix(i + 1, j - 1));

@@ -160,14 +160,22 @@ int main(int argc, char **argv) {
         std::cout << row[2] << std::endl;
 #endif
         {
+#ifdef MTSIMD
+          auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
+	  la->sw_finegrain_type = -1;
+#else
           auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2], fa_string);
 	  la->sw_finegrain_type = arg_finegrain_type;
+#endif
+
 	  la->sw_nthreads = arg_nthreads;
           auto start = std::chrono::high_resolution_clock::now();
           score_tmp = la->calculateScore();
           auto end = std::chrono::high_resolution_clock::now();
           auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
           float duration_val = duration.count();
+	  
+	  std::cout<<"MT SIMD status code: "<<la->sw_mt_simd<<std::endl;
           std::cout << "i:" << i << ", dur_val:" << duration_val << std::endl;
           calculateScore_times(i - 1) = duration_val;
 
@@ -240,6 +248,7 @@ int main(int argc, char **argv) {
 
     int a = 59/4;
     std::cout<<"testing123: "<<a<<std::endl;
+    std::cout<<"END***** omp_sw_solve_small ************************************\n\n\n"<<std::endl;
 
 
   } else if (argv1 == "eigen1") {

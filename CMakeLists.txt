@@ -20,6 +20,7 @@ option(DEBUG "debug mode" OFF)
 option(VERBOSE "verbose output" OFF)
 option(USEMPI "Use MPI" OFF)
 option(USEOMP "Use OpenMP" OFF)
+option(MTSIMD "Multithread SIMD" OFF)
 set(CMAKE_BUILD_TYPE "Release")
 
 if (DEBUG)
@@ -53,6 +54,11 @@ if (USEOMP)
   message(STATUS "OMP Num Threads: ${OMP_NUM_THREADS}")
   include_directories(SYSTEM ${OpenMP_CXX_INCLUDE_DIRS})
 endif()
+
+if (MTSIMD)
+  add_definitions(-DMTSIMD)
+endif ()
+
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/aligner ALIGNER_SRCS)
 add_library(libaligner ${ALIGNER_SRCS})

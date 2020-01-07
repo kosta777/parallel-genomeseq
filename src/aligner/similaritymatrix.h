@@ -47,6 +47,9 @@ class Similarity_Matrix : public Abstract_Similarity_Matrix{
 #ifdef USEOMP
     int sm_nthreads;
     int sm_finegrain_type;
+#ifdef MTSIMD
+    int sm_mt_simd;
+#endif
 #endif
 
   private:
@@ -77,6 +80,9 @@ class Similarity_Matrix_Skewed: public Abstract_Similarity_Matrix {
 #ifdef USEOMP
     int sm_nthreads;
     int sm_finegrain_type;
+#ifdef MTSIMD
+    int sm_mt_simd;
+#endif
 #endif
 
   private:

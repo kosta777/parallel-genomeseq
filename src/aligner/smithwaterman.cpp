@@ -85,6 +85,9 @@ float SWAligner<SMT>::calculateScore() {
 #endif
 
   similarity_matrix.iterate(scoring_function, gap_penalty);
+#ifdef MTSIMD
+  sw_mt_simd = similarity_matrix.sm_mt_simd;
+#endif
   sm_timings = similarity_matrix.getTimings();
 
 #ifdef USEOMP

@@ -37,6 +37,7 @@ class SWAligner : public LocalAligner<Similarity_Matrix_Type> {
 #ifdef USEOMP
     int sw_nthreads;
     int sw_finegrain_type;
+    int sw_mt_simd;
 #endif
   private:
     Eigen::VectorXf sm_timings;

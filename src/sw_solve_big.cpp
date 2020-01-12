@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   omp_set_dynamic(0);
   int npiece;
   if (argc < 3) {
-    std::cout << "Please specify number of pieces to break e.g: `sw_solve_big <npiece> <nrepeat>`" <<std::endl;
+    std::cout << "Please specify number of pieces to break e.g: `sw_solve_big <npiece> <nrepeat>`" << std::endl;
     return -1;
   } else {
     npiece = std::stoi(argv[1]);
@@ -66,21 +66,21 @@ int main(int argc, char **argv) {
 
     if (i > 0) {
       {
-        auto matsize = row[2].size()*fa_string.size();
+        auto matsize = row[2].size() * fa_string.size();
         if (i == 1) {
-          std::cout << "[INFO] Estimated Memory consumption " << (double)(matsize*sizeof(uint8_t))*1e-9 << "GB" << std::endl;
+          std::cout << "[INFO] Estimated Memory consumption " << (double) (matsize * sizeof(uint8_t)) * 1e-9 << "GB" << std::endl;
 #ifdef USEOMP
-          std::cout << "[INFO] Theoretical GCUPS on Leonhard: " << npiece*4.6/(fa_string.size()+2*(npiece-1)*overlaprate*row[2].size())*fa_string.size() << std::endl;
+          std::cout << "[INFO] Theoretical GCUPS on Leonhard: " << npiece * 4.6 / (fa_string.size() + 2 * (npiece - 1) * overlaprate * row[2].size()) * fa_string.size() << std::endl;
 #endif
         }
         //std::cout << "progress: " << i << std::endl;
 #ifdef USEOMP
-        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,npiece*2,overlaprate);
+        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2], fa_string, npiece * 2, overlaprate);
 #else
         auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
 #endif
         auto time_min = 9e20;
-	auto time_iter_min = 9e20;
+        auto time_iter_min = 9e20;
         for (auto j = 0; j < nrepeat; j++) {
           la->calculateScore();
           time_min = std::min(time_min, (double) (la->getTimings()[0]));
@@ -88,20 +88,20 @@ int main(int argc, char **argv) {
         }
 
         time_avg += time_min;
-	time_iter_avg += time_iter_min;
-        GCUPS_vec.emplace_back(matsize/time_min*1e-3);
+        time_iter_avg += time_iter_min;
+        GCUPS_vec.emplace_back(matsize / time_min * 1e-3);
         num_cells += matsize;
       }
     }
 
     i++;
   }
-  auto GCUPS = num_cells/time_avg*1e-3;
-  auto GCUPS_iter = num_cells/time_iter_avg*1e-3;
+  auto GCUPS = num_cells / time_avg * 1e-3;
+  auto GCUPS_iter = num_cells / time_iter_avg * 1e-3;
   time_avg /= (i - 1);
-  Eigen::Map<Eigen::ArrayXd> GCUPS_arr(&GCUPS_vec[0],i - 1);
+  Eigen::Map<Eigen::ArrayXd> GCUPS_arr(&GCUPS_vec[0], i - 1);
   align_input.close();
-  std::cout << "[INFO] Average SW iter_ad_read times: " << time_avg*1e-6 << "s, GCUPS:" << GCUPS << ", GCPUS per iteration: " << GCUPS_iter << std::endl;
+  std::cout << "[INFO] Average SW iter_ad_read times: " << time_avg * 1e-6 << "s, GCUPS:" << GCUPS << ", GCPUS per iteration: " << GCUPS_iter << std::endl;
   std::cout << "[INFO] GCUPS avg:" << GCUPS_arr.mean() << ", GCUPS std:" << sqrt((GCUPS_arr - GCUPS_arr.mean()).square().mean()) << std::endl;
   std::cout << GCUPS_arr.transpose() << std::endl;
 }

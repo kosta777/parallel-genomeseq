@@ -17,48 +17,43 @@
 #include <omp.h>
 #endif
 
-class CSVWriter
-{
-	std::string fileName;
-	std::string delimeter;
-	int linesCount;
- 
-public:
-	CSVWriter(std::string filename, std::string delm = ",") :
-			fileName(filename), delimeter(delm), linesCount(0)
-	{}
-	/*
-	 * Member function to store a range as comma seperated value
-	 */
-	template<typename T>
-	void addDatainRow(T first, T last, int append);
+class CSVWriter {
+  std::string fileName;
+  std::string delimeter;
+  int linesCount;
+
+ public:
+  CSVWriter(std::string filename, std::string delm = ",") : fileName(filename), delimeter(delm), linesCount(0) {}
+  /*
+   * Member function to store a range as comma seperated value
+   */
+  template<typename T>
+  void addDatainRow(T first, T last, int append);
 };
- 
+
 /*
  * This Function accepts a range and appends all the elements in the range
  * to the last row, seperated by delimeter (Default is comma)
  */
 template<typename T>
-void CSVWriter::addDatainRow(T first, T last, int append)
-{
-	std::fstream file;
-	// Open the file in truncate mode if first line else in Append Mode
+void CSVWriter::addDatainRow(T first, T last, int append) {
+  std::fstream file;
+  // Open the file in truncate mode if first line else in Append Mode
 //	file.open(fileName, std::ios::out | (linesCount ? std::ios::app : std::ios::trunc));
-	file.open(fileName, std::ios::out | (append ? std::ios::app : std::ios::trunc));
+  file.open(fileName, std::ios::out | (append ? std::ios::app : std::ios::trunc));
 
 
-	// Iterate over the range and add each lement to file seperated by delimeter.
-	for (; first != last; )
-	{
-		file << *first;
-		if (++first != last)
-			file << delimeter;
-	}
-	file << "\n";
-	linesCount++;
- 
-	// Close the file
-	file.close();
+  // Iterate over the range and add each lement to file seperated by delimeter.
+  for (; first != last;) {
+    file << *first;
+    if (++first != last)
+      file << delimeter;
+  }
+  file << "\n";
+  linesCount++;
+
+  // Close the file
+  file.close();
 }
 
 int main(int argc, char **argv) {
@@ -97,13 +92,13 @@ int main(int argc, char **argv) {
     std::string fa_line;
     int i = 0;
     while (std::getline(fa, fa_line)) {
-      if (i+1 > fa_file_has_header) {
+      if (i + 1 > fa_file_has_header) {
         fa_string += fa_line;
       }
       i++;
     }
     fa.close();
-    std::cout<<"omp_sw_solve_small line 99, i:  "<<i<<std::endl;
+    std::cout << "omp_sw_solve_small line 99, i:  " << i << std::endl;
 
 #ifdef VERBOSE
     std::cout << "fa stuff: " << std::endl;
@@ -162,41 +157,38 @@ int main(int argc, char **argv) {
         {
 #ifdef MTSIMD
           auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
-	  la->sw_finegrain_type = -1;
+    la->sw_finegrain_type = -1;
 #else
           auto la = std::make_unique<SWAligner<Similarity_Matrix>>(row[2], fa_string);
-	  la->sw_finegrain_type = arg_finegrain_type;
+          la->sw_finegrain_type = arg_finegrain_type;
 #endif
 
-	  la->sw_nthreads = arg_nthreads;
+          la->sw_nthreads = arg_nthreads;
           auto start = std::chrono::high_resolution_clock::now();
           score_tmp = la->calculateScore();
           auto end = std::chrono::high_resolution_clock::now();
           auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
           float duration_val = duration.count();
-	  
-	  std::cout<<"MT SIMD status code: "<<la->sw_mt_simd<<std::endl;
+
+          std::cout << "MT SIMD status code: " << la->sw_mt_simd << std::endl;
           std::cout << "i:" << i << ", dur_val:" << duration_val << std::endl;
           calculateScore_times(i - 1) = duration_val;
 
           pos_pred_tmp = la->getPos();
 
-	  SM_timings_tmp = la->getTimings();
-          std::cout<<"sw_iter_ad_read_times: "<<SM_timings_tmp(0)<<"us"<<std::endl;
-          read_sm_iterate_times(i-1) = SM_timings_tmp(0);
+          SM_timings_tmp = la->getTimings();
+          std::cout << "sw_iter_ad_read_times: " << SM_timings_tmp(0) << "us" << std::endl;
+          read_sm_iterate_times(i - 1) = SM_timings_tmp(0);
 
-          std::cout<<"sw_iter_ad_i_times_sum: "<<SM_timings_tmp(1)<<"us"<<std::endl;
-          adsum_sm_iterate_times(i-1) = SM_timings_tmp(1);
-
+          std::cout << "sw_iter_ad_i_times_sum: " << SM_timings_tmp(1) << "us" << std::endl;
+          adsum_sm_iterate_times(i - 1) = SM_timings_tmp(1);
 
 #ifdef VERBOSE
           std::cout << "OMP test stuff" << std::endl;
           std::cout << la->pub_max_score << std::endl;
 #endif
         }
-        align_output << input_line << ", "
-                     << pos_pred_tmp << ", "
-                     << score_tmp << "\n";
+        align_output << input_line << ", " << pos_pred_tmp << ", " << score_tmp << "\n";
       }
 
       if (i % 50 == 0) {
@@ -209,7 +201,7 @@ int main(int argc, char **argv) {
     align_input.close();
     align_output.close();
     std::cout << "Done, align output file see: " << align_output_file_path << std::endl;
-    
+
     std::cout << "calculateScore_times (us): " << std::endl;
     std::cout << calculateScore_times << std::endl;
 
@@ -219,24 +211,22 @@ int main(int argc, char **argv) {
     std::cout << "adsum sm_iterate_times (us): " << std::endl;
     std::cout << adsum_sm_iterate_times << std::endl;
 
-
     std::ifstream timing_file_exist(timing_file_path);
-    std::cout<<timing_file_exist.good()<<std::endl;
+    std::cout << timing_file_exist.good() << std::endl;
     CSVWriter timing_writer(timing_file_path);
     std::vector<std::string> header_tmp;
     std::vector<float> row_tmp;
     float arg_nreads_float = (float) arg_nreads;
     float arg_nthreads_float = (float) arg_nthreads;
     float arg_finegrain_type_float = (float) arg_finegrain_type;
-    if (timing_file_exist.good() != 1){
+    if (timing_file_exist.good() != 1) {
 //      header_tmp = {"n_reads","n_threads","time1","time2"};
-      header_tmp = {"n_reads","n_threads","finegrain_type","avg_t_calcscore","avg_t_adread","avg_t_adisum"};
-      timing_writer.addDatainRow(header_tmp.begin(),header_tmp.end(),0);
+      header_tmp = {"n_reads", "n_threads", "finegrain_type", "avg_t_calcscore", "avg_t_adread", "avg_t_adisum"};
+      timing_writer.addDatainRow(header_tmp.begin(), header_tmp.end(), 0);
     }
 //    row_tmp = {arg_nreads_float, arg_nthreads_float, 
-    row_tmp = {arg_nreads_float, arg_nthreads_float, arg_finegrain_type_float,
-	    calculateScore_times.mean(), read_sm_iterate_times.mean(), adsum_sm_iterate_times.mean()};
-    timing_writer.addDatainRow(row_tmp.begin(),row_tmp.end(),1);
+    row_tmp = {arg_nreads_float, arg_nthreads_float, arg_finegrain_type_float, calculateScore_times.mean(), read_sm_iterate_times.mean(), adsum_sm_iterate_times.mean()};
+    timing_writer.addDatainRow(row_tmp.begin(), row_tmp.end(), 1);
 
     /*
     for (i=0; i<arg_nreads; i++){
@@ -246,10 +236,9 @@ int main(int argc, char **argv) {
     */
     std::cout << "Done, timing file see: " << timing_file_path << std::endl;
 
-    int a = 59/4;
-    std::cout<<"testing123: "<<a<<std::endl;
-    std::cout<<"END***** omp_sw_solve_small ************************************\n\n\n"<<std::endl;
-
+    int a = 59 / 4;
+    std::cout << "testing123: " << a << std::endl;
+    std::cout << "END***** omp_sw_solve_small ************************************\n\n\n" << std::endl;
 
   } else if (argv1 == "eigen1") {
     std::cout << "Hello omp eigen" << std::endl;

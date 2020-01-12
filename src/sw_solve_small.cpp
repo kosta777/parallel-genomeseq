@@ -79,18 +79,16 @@ int main() {
 #endif
       {
 #ifdef USEOMP
-        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2],fa_string,17,2.0);
+        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2], fa_string, 17, 2.0);
 #else
         auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
 #endif
         score_tmp = la->calculateScore();
         pos_pred_tmp = la->getPos();
         time_avg += la->getTimings()[0];
-        num_cells += row[2].size()*fa_string.size();
+        num_cells += row[2].size() * fa_string.size();
       }
-      align_output << input_line << ", "
-                   << pos_pred_tmp << ", "
-                   << score_tmp << "\n";
+      align_output << input_line << ", " << pos_pred_tmp << ", " << score_tmp << "\n";
     }
 
     if (i % 50 == 0) {
@@ -99,7 +97,7 @@ int main() {
 
     i++;
   }
-  auto GCUPs = num_cells/time_avg*1e-3;
+  auto GCUPs = num_cells / time_avg * 1e-3;
   time_avg /= i;
   align_input.close();
   align_output.close();

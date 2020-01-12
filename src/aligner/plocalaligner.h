@@ -29,7 +29,6 @@ class OMPParallelLocalAligner : public ParallelLocalAligner<Similarity_Matrix_Ty
   std::string_view sequence_y;
   std::function<float(const char &, const char &)> scoring_function;
   std::vector<std::pair<Eigen::Index, Eigen::Index>> string_ranges;
-  std::vector<std::unique_ptr<Similarity_Matrix_Type>> smptr_vec;
 };
 
 #endif //_PLOCALALIGNER_H_

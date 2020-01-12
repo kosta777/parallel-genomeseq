@@ -5,6 +5,9 @@
 #include <vector>
 #include <assert.h>
 #include <chrono>
+#ifdef USEOMP
+#include <omp.h>
+#endif
 
 template<class SMT, class LAT>
 OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view first_sequence, std::string_view second_sequence, int npiece, float overlap_ratio)
@@ -66,46 +69,51 @@ OMPParallelLocalAligner<SMT, LAT>::OMPParallelLocalAligner(std::string_view firs
     sequence_x(first_sequence),
     sequence_y(second_sequence),
     scoring_function(std::move(scoring_function)),
-    string_ranges(_make_string_range(npiece, sequence_x.size(), sequence_y.size(), overlap_ratio)),
-    smptr_vec() {
+    string_ranges(_make_string_range(npiece, sequence_x.size(), sequence_y.size(), overlap_ratio))
+    {
   consensus_x.reserve(sequence_x.size());
   consensus_y.reserve(sequence_x.size());
-#ifdef USEOMP
-#pragma omp parallel for default(none) shared(npiece, sequence_x, sequence_y, smptr_vec) num_threads(npiece) schedule(static, 1)
-#endif
-  for (int i = 0; i < npiece; i++) {
-    Eigen::Index left = string_ranges[i].first;
-    Eigen::Index right = string_ranges[i].second;
-    std::string_view sequence_y_i = sequence_y.substr(left, right - left);
-    auto smptr = std::make_unique<SMT>(sequence_x, sequence_y_i);
-#pragma omp critical
-    smptr_vec.emplace_back(std::move(smptr));
-  }
 }
 
 template<class SMT, class LAT>
 float OMPParallelLocalAligner<SMT, LAT>::calculateScore() {
   float max_score_l = -1.0;
   int max_score_piece = 0;
-  auto iter_ad_read_start = std::chrono::high_resolution_clock::now();
-#ifdef USEOMP
-#pragma omp parallel for default(none) shared(npiece, max_score_l, max_score_piece, scoring_function, gap_penalty, smptr_vec) num_threads(npiece) schedule(static, 1)
-#endif
-  for (int i = 0; i < npiece; i++) {
-    smptr_vec[i]->iterate(scoring_function, gap_penalty);
-  }
-  auto iter_ad_read_end = std::chrono::high_resolution_clock::now();//OVERESTIMATE TIME
-  sm_timings[0] = (float) std::chrono::duration_cast<std::chrono::microseconds>(iter_ad_read_end - iter_ad_read_start).count();
   double time_iter = 0.0;
+  auto t0 = std::chrono::high_resolution_clock::now();
+  auto t1 = std::chrono::high_resolution_clock::now();
 #ifdef USEOMP
-#pragma omp parallel for default(none) shared(npiece, max_score_l, max_score_piece, smptr_vec, time_iter) num_threads(npiece) schedule(static, 1)
+#pragma omp parallel default(none) num_threads(npiece) shared(sequence_x, sequence_y, string_ranges, t0, t1, time_iter, npiece, max_score_l, max_score_piece, scoring_function, gap_penalty)
 #endif
-  for (int i = 0; i < npiece; i++) {
-    auto[x, y, max] = smptr_vec[i]->find_index_of_maximum();
-    time_iter += smptr_vec[i]->getTimings()[0];
-    if (max > max_score_l) {
-      max_score_l = max;
-      max_score_piece = i;
+  {
+    auto i = omp_get_thread_num();
+    Eigen::Index left = string_ranges[i].first;
+    Eigen::Index right = string_ranges[i].second;
+    std::string_view sequence_y_i = sequence_y.substr(left, right - left);
+    auto smptr = std::make_unique<SMT>(sequence_x, sequence_y_i);
+    auto sf_local = scoring_function;
+    auto gp_local = gap_penalty;
+#pragma omp barrier
+#pragma omp master
+    t0 = std::chrono::high_resolution_clock::now();
+
+    smptr->iterate(sf_local, gp_local);
+
+#pragma omp barrier
+#pragma omp master
+    {
+      t1 = std::chrono::high_resolution_clock::now();//OVERESTIMATE TIME
+      sm_timings[0] = (float) std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+    }
+
+    auto[x, y, max] = smptr->find_index_of_maximum();
+#pragma omp critical
+    {
+      time_iter += smptr->getTimings()[0];
+      if (max > max_score_l) {
+        max_score_l = max;
+        max_score_piece = i;
+      }
     }
   }
   sm_timings[1] = time_iter;

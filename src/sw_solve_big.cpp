@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
         }
         //std::cout << "progress: " << i << std::endl;
 #ifdef USEOMP
-        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2], fa_string, npiece * 2, overlaprate);
+        auto la = std::make_unique<OMPParallelLocalAligner<Similarity_Matrix_Skewed, SWAligner<Similarity_Matrix_Skewed>>>(row[2], fa_string, npiece, overlaprate);
 #else
         auto la = std::make_unique<SWAligner<Similarity_Matrix_Skewed>>(row[2], fa_string);
 #endif

@@ -51,9 +51,12 @@ if __name__ == '__main__':
             seq_mean = (df[df['n_threads']==1][t2_key]).mean()
             df['y'] = seq_mean/(df[t2_key].values)
         elif argsdict['yaxis'] == "gcups":
-            gc = (1E4)*(3E4)/(1E9)
-            df['y'] = gc/(df[t2_key].values)
-            ylabel_txt = "GCUPS (nb: gc=0.3 fixed)"
+            gc = (1E4)*(3E4)/(1E9) #fixed
+            df['y'] = gc/(df[t2_key].values/1E6)
+            df['y_reci'] = 1/df['y']
+#            ylabel_txt = "GCUPS (nb: gc=0.3 fixed)"
+            ylabel_txt = "GCUPS"
+
 
         if argsdict['plot_type'] == "scatter":
             x_data = np.log2(x_data)
@@ -61,27 +64,38 @@ if __name__ == '__main__':
         elif argsdict['plot_type'] == "box_plot":
             x_data_unique = np.unique(df['n_threads'].values)
             bp_data = [df[df['n_threads']==x]['y'].values for x in x_data_unique]
-            flier_settings = dict(markersize=3.5, markerfacecolor='g', marker='D' )
-#            ax1.boxplot(x=bp_data,positions=np.log2(x_data_unique),widths=0.15,flierprops=flier_settings)
-            ax1.boxplot(x=bp_data,positions=np.log2(x_data_unique),widths=0.15,showfliers=False)
 
-        if argsdict['fit'] == 'true':
+#            flier_settings = dict(markersize=3.5, markerfacecolor='g', marker='D' )
+#            flier_settings = dict(markersize=3.5, markerfacecolor='black', marker='o' )
+#            ax1.boxplot(x=bp_data,positions=np.log2(x_data_unique),widths=0.15,flierprops=flier_settings)
+            ax1.boxplot(boxprops=dict(linewidth=1.5),x=bp_data,positions=np.log2(x_data_unique),widths=0.15,showfliers=False)
+
+        if argsdict['fit'] == 'poly':
             w_opt,w_cov = curve_fit(poly_fit,np.log2(x_data),df['y'].values)
             x_fit = np.linspace(np.log2(np.min(x_data)),np.log2(np.max(x_data)),1000)
             t_fit = poly_fit(x_fit,*w_opt)
             ax1.plot(x_fit,t_fit,linewidth=1.0,color="red")
+        elif argsdict['fit'] == 'hmean':
+            y_hmean = np.zeros(len(x_data_unique)) #harmonic mean
+            for i in range(len(x_data_unique)):
+                y_hmean[i] = 1/(df[df['n_threads']==x_data_unique[i]]['y_reci'].mean())
+            ax1.plot(np.log2(x_data_unique),y_hmean,linewidth=1.0,color="red",label="Harmonic mean")
+            ax1.legend(loc='upper left')
+            ax1.scatter(np.log2(df['n_threads'].values),df['y'],s=5.0,color='black',marker='o')
 
         ax1.minorticks_on()
         ax1.grid(which='major',linestyle='-',linewidth=0.5)
         ax1.grid(which='minor',linestyle=':',linewidth=0.5)
 
-        ax1.set_title("OMP parallelization of anti-diagonal DP matrix construction (fine grain)")
+#        ax1.set_title("OMP parallelization of anti-diagonal DP matrix construction (fine grain)")
         ax1.set_xlabel(r"$N_{threads}$")
 #        ax1.set_xticks(2**(np.arange(0,7)))
         ax1.set_xticks(np.arange(0,7))
         ax1.set_xticklabels(2**(np.arange(0,7)))
 
         ax1.set_ylabel(ylabel_txt) #10k* 30k D
+
+        ax1.set_aspect(aspect=(3/4)/ax1.get_data_ratio())
         plt.show()
 
 

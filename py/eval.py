@@ -80,7 +80,7 @@ if __name__ == '__main__':
             for i in range(len(x_data_unique)):
                 y_hmean[i] = 1/(df[df['n_threads']==x_data_unique[i]]['y_reci'].mean())
             ax1.plot(np.log2(x_data_unique),y_hmean,linewidth=1.0,color="red",label="Harmonic mean")
-            ax1.legend(loc='upper left')
+            ax1.legend(loc='upper left',fontsize=12)
             ax1.scatter(np.log2(df['n_threads'].values),df['y'],s=5.0,color='black',marker='o')
 
         ax1.minorticks_on()
@@ -88,12 +88,12 @@ if __name__ == '__main__':
         ax1.grid(which='minor',linestyle=':',linewidth=0.5)
 
 #        ax1.set_title("OMP parallelization of anti-diagonal DP matrix construction (fine grain)")
-        ax1.set_xlabel(r"$N_{threads}$")
+        ax1.set_xlabel(r"$\mathregular{N_{threads}}$", fontsize=16)
 #        ax1.set_xticks(2**(np.arange(0,7)))
         ax1.set_xticks(np.arange(0,7))
         ax1.set_xticklabels(2**(np.arange(0,7)))
 
-        ax1.set_ylabel(ylabel_txt) #10k* 30k D
+        ax1.set_ylabel(ylabel_txt, fontsize=16) #10k* 30k D
 
         ax1.set_aspect(aspect=(3/4)/ax1.get_data_ratio())
         plt.show()
